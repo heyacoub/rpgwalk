@@ -291,6 +291,8 @@ body[data-room=dark] #cap{color:#ffb9a6}
     <h3>Bench testing</h3>
     <label><input type="checkbox" id="setBench"><span>Fast mode: 8-second mount, 20-second wind.</span></label>
     <label><input type="checkbox" id="setManual"><span>Buttons instead of gestures.</span></label>
+    <h3>Sensor check</h3>
+    <p id="senseOut" style="font:14px/1.5 var(--type)">Take the camera first.</p>
     <div class="btns">
       <button class="brass" id="demo">Darkroom with 3 sample plates</button>
       <button class="brass" id="copyLog">Copy walk log</button>
@@ -401,8 +403,8 @@ let wl=null;async function wake(){try{if(navigator.wakeLock&&document.visibility
 document.addEventListener('visibilitychange',()=>{if(started&&document.visibilityState==='visible'){wake();A()}});
 
 /* ---------- senses: tilt, stillness, steps, place ---------- */
-const M={have:false,beta:null,gamma:0,rot:0,heading:null};
-function onOri(e){if(e.beta==null)return;M.have=true;M.beta=e.beta;M.gamma=e.gamma||0;
+const M={have:false,beta:null,gamma:0,rot:0,heading:null,perm:'not asked',events:0};
+function onOri(e){if(e.beta==null)return;M.have=true;M.events++;M.beta=e.beta;M.gamma=e.gamma||0;
   if(e.webkitCompassHeading!=null)M.heading=e.webkitCompassHeading;else if(e.absolute&&e.alpha!=null)M.heading=360-e.alpha}
 let aAvg=9.8,lastStep=0,armedStep=false;
 function onMot(e){const r=e.rotationRate;if(r&&r.alpha!=null)M.rot=M.rot*.8+Math.hypot(r.alpha,r.beta||0,r.gamma||0)*.2;
@@ -410,7 +412,8 @@ function onMot(e){const r=e.rotationRate;if(r&&r.alpha!=null)M.rot=M.rot*.8+Math
     if(d>1.3&&armedStep&&t-lastStep>280){lastStep=t;armedStep=false;if(!S.roll.ready)S.roll.steps++}
     if(d<.3)armedStep=true}}
 const manual=()=>S.set.manual||!M.have;
-const raised=()=>M.beta>68&&M.beta<125, lowered=()=>M.beta<45||M.beta>150, still=()=>M.rot<14;
+const upright=()=>{const p=Math.PI/180;return Math.asin(Math.min(1,Math.abs(Math.cos(M.beta*p)*Math.cos((M.gamma||0)*p))))/p}; /* 0 = screen vertical, 90 = flat */
+const raised=()=>M.beta!=null&&upright()<32, lowered=()=>M.beta!=null&&upright()>58, still=()=>M.rot<14;
 function hav(a,b){const R=6371000,p=Math.PI/180,dl=(b.lat-a.lat)*p,dn=(b.lon-a.lon)*p,
   h=Math.sin(dl/2)**2+Math.cos(a.lat*p)*Math.cos(b.lat*p)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
 function bearing(a,b){const p=Math.PI/180,y=Math.sin((b.lon-a.lon)*p)*Math.cos(b.lat*p),
@@ -458,6 +461,8 @@ function tryRaise(){const r=S.roll;
 
 /* ---------- mounting and the shot ---------- */
 const mountEl=$('#mount'),vf=$('#vf'),pickPrev=$('#pickPrev');
+let darkT=0,darkRun=0;const lc=el('canvas');lc.width=lc.height=12;
+function lensDark(){try{const x=lc.getContext('2d',{willReadFrequently:true});x.drawImage(vf,0,0,12,12);const d=x.getImageData(0,0,12,12).data;let m=0;for(let i=0;i<d.length;i+=4)m+=d[i]+d[i+1]+d[i+2];return m/(144*3)<10}catch(e){return false}}
 let mp=0,mstate='idle',stream=null,camOK=false,lowT=0,mt=0,pick=null;
 async function camStart(){camOK=false;try{
     stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});
@@ -465,12 +470,13 @@ async function camStart(){camOK=false;try{
     vf.srcObject=stream;await vf.play().catch(()=>{});camOK=true}catch(e){camOK=false}}
 function camStop(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}vf.srcObject=null;camOK=false}
 function enterMount(){if(!S.roll.loaded){S.roll.loaded=true;save();sfx.chime()}
-  mp=0;mt=0;lowT=0;mstate='mounting';pick=null;pickPrev.hidden=true;mountEl.classList.remove('ready','wob');$('#nolens').hidden=true;
+  mp=0;mt=0;lowT=0;darkRun=0;mstate='mounting';pick=null;pickPrev.hidden=true;mountEl.classList.remove('ready','wob');$('#nolens').hidden=true;
   mountEl.style.setProperty('--p',0);mountEl.style.setProperty('--iris',0);
   go('mount');sfx.creak();fork.on();camStart();wake();say('Hold still. Look.');$('#lower').hidden=!manual()}
 function fold(msg){mstate='idle';fork.off();camStop();sfx.fold();upArmed=false;go('face');say(msg||'',6000)}
 function tickMount(dt){
   if(!manual()){if(lowered()){lowT+=dt;if(lowT>1.1&&mstate!=='done')return fold(mstate==='ready'?'Folded. The plate is still wound.':'Folded. No plate spent.')}else lowT=0}
+  if(camOK&&!manual()&&mstate!=='done'){darkT=(darkT||0)+dt;if(darkT>.5){darkT=0;darkRun=lensDark()?darkRun+.5:0;if(darkRun>=2)return fold('')}}
   if(mstate!=='mounting')return;
   const st=manual()||(still()&&raised()),T=mountSecs();mt+=dt;
   if(st)mp=Math.min(1,mp+dt/T);
@@ -714,6 +720,9 @@ async function drawMap(){const pts=known.filter(p=>p.lat!=null),m=$('#map'),note
 function logText(){const by={};known.forEach(p=>(by[p.roll]=by[p.roll]||[]).push(p));
   return Object.values(by).map(ps=>`Roll of ${new Date(ps[0].t).toLocaleString()}\nReflection: ${ps[0].note||''}\n`+ps.map(p=>
     `  Plate ${p.n} · ${new Date(p.t).toLocaleTimeString()} · ${p.lat!=null?p.lat.toFixed(5)+', '+p.lon.toFixed(5):'no fix'} · ${p.cr.kind} "${p.cr.name}" (${p.cr.mood}, ${p.cr.by})`).join('\n')).join('\n\n')||'No walks developed yet.'}
+function senseOut(){const o=$('#senseOut');if(!started)return;
+  o.innerHTML=M.have?`Motion permission: ${M.perm}<br>Tilt from upright: ${upright().toFixed(0)}° ${raised()?'(raised)':lowered()?'(lowered)':''}<br>Steadiness: ${M.rot.toFixed(1)} °/s ${still()?'(still)':'(moving)'}<br>Steps this plate: ${S.roll.steps}`
+    :`Motion permission: ${esc(M.perm)}<br>No motion data is arriving, so the camera uses buttons. On iPhone: Settings → Apps → Safari → Motion &amp; Orientation Access must be on, then reload and tap Take the camera.`}
 function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);$('#hf').value=S.set.hf;$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
   $('#logOut').hidden=true;$('#erase').textContent='Erase everything';$('#shop').hidden=false}
 function wire(){
@@ -743,11 +752,13 @@ async function take(){A();sfx.click();const ps=[];                 /* iOS only g
   try{if(window.DeviceMotionEvent&&DeviceMotionEvent.requestPermission)ps.push(DeviceMotionEvent.requestPermission());
     if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission)ps.push(DeviceOrientationEvent.requestPermission())}catch(e){}
   let cam=null;try{if(navigator.mediaDevices)cam=navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}}).then(s=>s.getTracks().forEach(t=>t.stop())).catch(()=>{})}catch(e){}
-  await Promise.allSettled(ps);await cam;await begin();sfx.creak();
+  const pr=await Promise.allSettled(ps);M.perm=!ps.length?'not needed':pr.every(r=>r.status==='fulfilled'&&r.value==='granted')?'granted':pr.map(r=>r.status==='fulfilled'?r.value:'error').join(' / ');
+  await cam;await begin();sfx.creak();
   if(S.roll.pulled)return enterDark();
   go('face');say(S.roll.loaded?(S.roll.ready?'Raise it to your eye when something catches you.':'Walk on. Your steps wind the next plate.'):'Hold the canister to load a fresh roll.',9000)}
 let last=now();
 function loop(){const t=now(),dt=Math.min(.1,(t-last)/1000);last=t;
+  if(!$('#shop').hidden)senseOut();
   if(room==='face')tickFace(dt);else if(room==='mount')tickMount(dt);else if(room==='dark')tickDark(dt);requestAnimationFrame(loop)}
 DB.open().then(()=>{wire();requestAnimationFrame(loop)});
 window.__mc={S:()=>S,M,dk,sampleScene,drawCreature,KINDS,moodOf};
