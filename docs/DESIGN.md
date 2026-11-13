@@ -40,13 +40,14 @@ Load → walk → unfold → mount → squeeze → wind → pull the roll → da
 ### 2.3 Unfold and mount
 ![mounting](screens/04-mounting.png) ![mounted](screens/06-mounted.png)
 
-- **Unfold:** raise the phone upright (tilt between 68° and 125°) and hold still for 0.9 s. A wooden creak, then a click. **Claude.** In the voice session we discussed flipping the phone face-up to unfold it. Raising was chosen because it's more reliable coming out of a pocket and doubles as the start of the mount.
+- **Unfold:** raise the phone upright (tilt between 68° and 125°) and hold still for 0.9 s. A wooden creak, then a click. **Claude.** In the voice session we discussed flipping the phone face-up to unfold it. Raising works upright in portrait or sideways like a camera (fixed 11 Nov from Yacoub's sensor recordings). It was chosen because it's more reliable coming out of a pocket and doubles as the start of the mount.
 - **Mount:** 60 s of stillness. **Yacoub** asked for a setup of a minute or two, time to observe mindfully. 60 s is the low end so the first test isn't tedious.
   - A brass ring fills as you hold still.
   - A breathing circle paces 4 s in and 6 s out. **Claude.**
   - A soft tuning-fork tone breathes with the circle and rises in pitch as the mount completes. When you wobble, the tone wavers and the ring shakes. **Claude.**
   - No music, only a faint tone, so you hear the street. **Yacoub.**
 - The screen stays black with no live feed until the last 5 s, when an iris opens onto the viewfinder so you can frame. **Claude** (proposed by voice; Yacoub didn't object).
+- Once mounted, the view stays a round lens inside the brass ring, and the plate is cropped to that circle's square, so prints are square. **Yacoub** (13 Nov): v0 jumped from the circle to a rounded rectangle, which felt wrong.
 - Lowering the phone for 1.1 s folds the camera. No plate is spent. **Claude.**
 
 ### 2.4 The squeeze
@@ -69,6 +70,10 @@ Load → walk → unfold → mount → squeeze → wind → pull the roll → da
 ### 2.6 The compass
 - Appears on the plate only once you have at least one creature with a location. It points to the nearest one and counts paces. **Yacoub:** the compass is earned.
 
+### 2.6b Ending the walk
+- "Hold to end the walk" seals the roll, and you can do it any time after the first plate. The darkroom opens only from a separate "Enter the darkroom" button, so developing happens when you're home. **Yacoub** (13 Nov). v0 went straight into the darkroom from the street.
+- Open: detect home automatically, for example by being back near where the roll was loaded.
+
 ### 2.7 The darkroom
 ![dark](screens/10-dark-off.png) ![slip](screens/11-slip.png) ![dissolve](screens/12-dissolve.png)
 ![developing](screens/14-dev-mid.png) ![developed](screens/16-developed.png) ![hung](screens/17-hung.png) ![lights](screens/18-lights-on.png)
@@ -79,7 +84,7 @@ Load → walk → unfold → mount → squeeze → wind → pull the roll → da
 2. **Safelight.** The bulb flickers on and everything turns red. A low electrical hum.
 3. **The slip.** A paper slip asks "How was the walk? What did you notice. How do you feel. Any feeling will do." The paper stays blank until you answer. Handwriting font, ruled lines.
 4. **Pour.** Your words dissolve letter by letter and sink, blurred, into the tray. Your words are the developer.
-5. **Rock the tray.** Tilt the phone side to side, or drag. The bulb sways with you, the liquid sloshes in sound and light, and the faster you rock the faster the image develops. The photo rises first from pale grey.
+5. **Rock the tray.** Tilt the phone side to side, or drag. The bulb sways with you, the liquid sloshes in sound and light, and the faster you rock the faster the image develops. About 3–6 s per plate with steady rocking, about 20 s without. **Yacoub** (13 Nov): v0 took too long. The photo rises first from pale grey.
 6. **Eyes first.** The creature's eyes open before its body appears, so for a moment something is looking at you from the photo. They blink every few seconds.
 7. **Lift it out.** It drips (three water notes) and is pegged to a line overhead with a wooden click. The next plate goes into the tray.
 8. **Lights on.** Once all are hung, pull the chain again. White light, and the prints, which were grey in the red light, flood into colour. A chime, then: "There they are. They were with you the whole walk."
@@ -151,11 +156,17 @@ Set in the workshop. Default: "best available".
 
 **Words:** the camera speaks one short italic line at a time at the bottom of the screen, and nothing else. **Claude.**
 
-**Sound:** every sound is synthesised in the browser, with no audio files. **Claude.** Chime, creak, fold, ratchet, valve hiss, shutter, film advance, tuning-fork tone, safelight hum, tray slosh, pour, drip, peg.
+**Sound:** on iPhone, sound plays even with the silent switch on (Safari 17+), and the audio unlocks on every touch. v0 was silent on his phone. **Claude** (13 Nov fix, untested on a real phone).
+
+Every sound is synthesised in the browser, with no audio files. **Claude.** Chime, creak, fold, ratchet, valve hiss, shutter, film advance, tuning-fork tone, safelight hum, tray slosh, pour, drip, peg.
 
 **Assets:** no third-party art, 3D models or audio samples are used. The camera, gauge, darkroom and creatures are drawn in code. The build machine could not reach Sketchfab, Poly Haven or Freesound. Sourcing real assets is open.
 
 ---
+
+## 5b. Tester
+- A faint "tester" button sits bottom-left on every screen: start a new roll or erase everything, from anywhere, including mid-darkroom. **Yacoub** (13 Nov).
+- Workshop → Sensor check shows live motion permission, tilt, steadiness and steps.
 
 ## 6. Saving
 
