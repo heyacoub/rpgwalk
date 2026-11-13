@@ -41,7 +41,7 @@ Load → walk → unfold → mount → squeeze → wind → pull the roll → da
 ![mounting](screens/04-mounting.png) ![mounted](screens/06-mounted.png)
 
 - **Unfold:** raise the phone upright (tilt between 68° and 125°) and hold still for 0.9 s. A wooden creak, then a click. **Claude.** In the voice session we discussed flipping the phone face-up to unfold it. Raising works upright in portrait or sideways like a camera (fixed 11 Nov from Yacoub's sensor recordings). It was chosen because it's more reliable coming out of a pocket and doubles as the start of the mount.
-- **Revised 13 Nov (Yacoub): the setup minute is mechanical and needs nothing from you.** Tap "Prepare the camera" (or raise it). For 60 s the screen shows only three dim brass gears turning, with a soft clockwork tick and the faint breathing tone. No ring, no progress, no need to hold still or keep it raised, so you can look at the thing itself. When it's ready: a clunk and a chime, then the brass ring fills and the iris opens onto the viewfinder (about 3.5 s), then press and hold to shoot. "Put it away" at the top cancels. A small "prepare now" text button, bottom-left, skips the minute for testing. What follows below is the v0 design it replaced.
+- **Revised 13 Nov (Yacoub): the setup minute is mechanical and needs nothing from you.** Tap "Prepare the camera" (or raise it). For 60 s the screen shows only three dim brass gears turning, with a quiet ambient synth pad underneath: four slow, unresolved chords (Am9, Fmaj7, G6, Em7) gliding every 9 s through a soft low-pass filter, fading in and breathing 4 s in, 6 s out. It's meant to help you reflect, not to tick like something to keep checking (Yacoub, 13 Nov: the clockwork tick felt too mechanical). No ring, no progress, no need to hold still or keep it raised, so you can look at the thing itself. When it's ready: a chime, then the brass ring fills and the iris opens onto the viewfinder (about 3.5 s), then press and hold to shoot. "Put it away" at the top cancels. A small "prepare now" text button, bottom-left, skips the minute for testing. What follows below is the v0 design it replaced.
 - **Mount (v0):** 60 s of stillness. **Yacoub** asked for a setup of a minute or two, time to observe mindfully. 60 s is the low end so the first test isn't tedious.
   - A brass ring fills as you hold still.
   - A breathing circle paces 4 s in and 6 s out. **Claude.**
@@ -51,7 +51,13 @@ Load → walk → unfold → mount → squeeze → wind → pull the roll → da
 - Once mounted, the view stays a round lens inside the brass ring, and the plate is cropped to that circle's square, so prints are square. **Yacoub** (13 Nov): v0 jumped from the circle to a rounded rectangle, which felt wrong.
 - Lowering the phone for 1.1 s folds the camera. No plate is spent. **Claude.**
 
-### 2.4 The squeeze
+### 2.4 Shutter and zoom (revised 13 Nov, Yacoub)
+- **Shutter:** a round brass shutter button with a dark leather centre, bottom centre. One press fires. It replaces "press and hold anywhere" from v0.
+- **Zoom crank:** no pinch. A small brass crank wheel, bottom right, that you turn in a circle with your finger. Clockwise zooms in, anticlockwise out, from 1× to 4×. One full turn is about 0.8×. Each 0.1× step clicks softly, with a heavier click every 0.5×.
+- **Haptics (native app, Yacoub):** every zoom step should give a crisp detent tick, like spinning the time wheels when setting an alarm on iPhone (UISelectionFeedbackGenerator, or Core Haptics for the heavier 0.5× notch). The web page can't vibrate on iPhone, so the click sound stands in for it. It vibrates on Android.
+- Zoom is digital in v0: the view is scaled and the plate is cropped to match, so heavy zoom gives smaller prints. The page asks for 4K camera frames to compensate. A native app would use the real lens zoom.
+
+### 2.4b The squeeze (v0, replaced)
 - Press and hold anywhere for 0.65 s, like a cable release. A shrinking ring shows the squeeze. **Claude.** We discussed firing on held breath plus stillness, but it's unreliable in a browser.
 - Flash, shutter clunk, film-advance ratchet. The plate counter rolls down, then the camera folds itself. **Yacoub** chose this small acknowledgement over folding silently.
 - Plates too dark to see anything (a covered lens) are refused and no plate is spent. **Claude.**

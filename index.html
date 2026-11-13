@@ -90,7 +90,22 @@ body[data-room=dark] #cap{color:#ffb9a6}
 /* ---- mounted camera ---- */
 #mount{background:#000;padding:0}
 #vf,#pickPrev{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;clip-path:circle(calc(var(--iris,0)*33vmin) at 50% 44%)}
-#mount.ready #vf,#mount.ready #pickPrev{clip-path:circle(33vmin at 50% 44%)}
+#mount.ready #vf,#mount.ready #pickPrev{clip-path:circle(calc(33vmin / var(--z,1)) at 50% 44%)}
+#vf,#pickPrev{transform:scale(var(--z,1));transform-origin:50% 44%}
+#controls{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 74px);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding:0 max(22px,env(safe-area-inset-right)) 0 max(22px,env(safe-area-inset-left));z-index:5;opacity:0;pointer-events:none;transition:opacity .6s}
+#mount.ready #controls{opacity:1;pointer-events:auto}
+#shutter{width:84px;height:84px;border-radius:50%;padding:0;border:0;background:radial-gradient(circle at 35% 30%,#fff3c4,#c9a24a 45%,#6f5119);
+  box-shadow:0 6px 14px rgba(0,0,0,.6),inset 0 -3px 6px rgba(0,0,0,.4);display:grid;place-items:center}
+#shutter i{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#6b2c1c,#2a0f08);box-shadow:inset 0 3px 6px rgba(0,0,0,.7),0 0 0 3px #3a2a12;transition:transform .08s}
+#shutter:active i{transform:scale(.88)}
+#crank{justify-self:end;position:relative;width:96px;height:96px;touch-action:none;display:grid;place-items:center}
+#crank .wheel2{position:absolute;inset:0;border-radius:50%;rotate:var(--a,0deg);
+  background:repeating-conic-gradient(#3a2a12 0 4deg,transparent 4deg 15deg),radial-gradient(circle,#2a1b10 0 40%,#c9a24a 41% 70%,#8a6a22 71%);
+  box-shadow:0 6px 14px rgba(0,0,0,.6),inset 0 0 0 3px #f3dc93}
+#crank .knob{position:absolute;left:50%;top:6px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3c4,#8a6a22);box-shadow:0 2px 4px rgba(0,0,0,.6)}
+#zoomOut{position:relative;font:13px var(--type);color:var(--parch);pointer-events:none}
+#crank:focus-visible,#shutter:focus-visible{outline:2px solid #fff;outline-offset:4px}
 .bezel{position:absolute;left:50%;top:44%;width:74vmin;height:74vmin;translate:-50% -50%;border-radius:50%;
   background:conic-gradient(var(--brass-hi) calc(var(--p,0)*360deg),#3a2a12 0);
   -webkit-mask:radial-gradient(closest-side,transparent calc(100% - 11px),#000 calc(100% - 10px));mask:radial-gradient(closest-side,transparent calc(100% - 11px),#000 calc(100% - 10px))}
@@ -275,6 +290,10 @@ body[data-room=dark] #cap{color:#ffb9a6}
   <button class="ghost" id="lower">put it away</button>
   <button id="prepNow" hidden>prepare now</button>
   <div id="sq"></div>
+  <div id="controls"><span></span>
+    <button id="shutter" aria-label="Shutter"><i></i></button>
+    <div id="crank" role="slider" aria-label="Zoom crank" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" tabindex="0"><div class="wheel2"><i class="knob"></i></div><b id="zoomOut">1.0×</b></div>
+  </div>
 </section>
 
 <section class="room dark off" id="dark">
@@ -387,6 +406,7 @@ const sfx={
   click(){air(.03,{f:3200,q:2,g:.34});tone(180,.05,{g:.12,type:'triangle'})},
   ratchet(){for(let i=0;i<3;i++)air(.025,{f:2600+i*320,q:3,g:.2,at:i*.065})},
   tick(t){air(.018,{f:Math.floor(t)%2?2400:1900,q:5,g:.07});tone(Math.floor(t)%2?1100:900,.03,{g:.012,type:'triangle'})},
+  detent(n){tone(n%5?2900:2300,.018,{g:n%5?.03:.05,type:'triangle'});air(.008,{f:5200,q:3,g:.06})},
   clunk(){tone(95,.25,{g:.28,type:'triangle'});air(.06,{f:700,q:1.2,g:.35});air(.03,{f:2600,q:2,g:.3,at:.12});tone(1320,.5,{g:.03,at:.12})},
   dry(){tone(140,.07,{g:.1,type:'square'});air(.045,{f:900,q:1,g:.15})},
   creak(){tone(90,.7,{to:250,type:'sawtooth',g:.03,a:.12});air(.62,{f:500,to:1500,q:7,g:.1,a:.08});air(.03,{f:3200,q:2,g:.3,at:.66})},
@@ -403,8 +423,13 @@ function voice(build){let n=null;return{
   on(){if(!ac||n)return;n=build(ac)},
   set(fn){if(n)fn(n,ac.currentTime)},
   off(){if(!n)return;const x=n;n=null;x.g.gain.setTargetAtTime(0,ac.currentTime,.12);setTimeout(()=>{try{x.stop()}catch(e){}},700)}}}
-const fork=voice(a=>{const g=a.createGain();g.gain.value=0;const o1=a.createOscillator(),o2=a.createOscillator(),g2=a.createGain();g2.gain.value=.45;
-  o1.frequency.value=216;o2.frequency.value=324;o1.connect(g);o2.connect(g2).connect(g);g.connect(master);o1.start();o2.start();return{g,o1,o2,stop(){o1.stop();o2.stop()}}});
+const CHORDS=[[110,164.81,196,246.94],[87.31,130.81,174.61,220],[98,146.83,196,246.94],[82.41,123.47,196,233.08]]; /* Am9-ish, Fmaj7, G6, Em7: slow, unresolved */
+const fork=voice(a=>{const g=a.createGain();g.gain.value=0;const f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=520;f.Q.value=.7;
+  const lfo=a.createOscillator(),lg=a.createGain();lfo.frequency.value=.07;lg.gain.value=260;lfo.connect(lg).connect(f.frequency);
+  const os=[];CHORDS[0].forEach((hz,i)=>[-5,5].forEach((ct,j)=>{const o=a.createOscillator(),og=a.createGain();o.type=j?'triangle':'sine';o.frequency.value=hz;o.detune.value=ct;
+    og.gain.value=i===0?.32:.2;o.connect(og).connect(f);o.start();os.push({o,i})}));
+  f.connect(g).connect(master);lfo.start();
+  return{g,os,chord:0,stop(){os.forEach(x=>x.o.stop());lfo.stop()}}});
 const hum=voice(a=>{const g=a.createGain();g.gain.value=0;g.gain.setTargetAtTime(.02,a.currentTime,.4);const o1=a.createOscillator(),o2=a.createOscillator();
   o1.frequency.value=100;o2.frequency.value=200.6;o1.connect(g);o2.connect(g);g.connect(master);o1.start();o2.start();return{g,stop(){o1.stop();o2.stop()}}});
 const slosh=voice(a=>{const g=a.createGain();g.gain.value=0;const s=a.createBufferSource(),f=a.createBiquadFilter();s.buffer=nbuf;s.loop=true;f.type='lowpass';f.frequency.value=650;
@@ -490,28 +515,28 @@ let darkT=0,darkRun=0;const lc=el('canvas');lc.width=lc.height=12;
 function lensDark(){try{const x=lc.getContext('2d',{willReadFrequently:true});x.drawImage(vf,0,0,12,12);const d=x.getImageData(0,0,12,12).data;let m=0;for(let i=0;i<d.length;i+=4)m+=d[i]+d[i+1]+d[i+2];return m/(144*3)<10}catch(e){return false}}
 let mp=0,mstate='idle',stream=null,camOK=false,lowT=0,mt=0,pick=null;
 async function camStart(){camOK=false;try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:3840},height:{ideal:2160}},audio:false});
     if(room!=='mount'){camStop();return}
     vf.srcObject=stream;await vf.play().catch(()=>{});camOK=true}catch(e){camOK=false}}
 function camStop(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}vf.srcObject=null;camOK=false}
 function enterMount(){if(!S.roll.loaded){S.roll.loaded=true;save();sfx.chime()}
   mp=0;mt=0;lowT=0;darkRun=0;mstate='mounting';pick=null;pickPrev.hidden=true;mountEl.classList.remove('ready','wob');$('#nolens').hidden=true;
-  mountEl.classList.remove('opening');mountEl.style.setProperty('--p',0);mountEl.style.setProperty('--iris',0);tickT=0;
+  mountEl.classList.remove('opening');mountEl.style.setProperty('--p',0);mountEl.style.setProperty('--iris',0);tickT=0;crankA=0;$('#crank').style.setProperty('--a','0deg');zoom=1;setZoom(1);
   go('mount');sfx.creak();fork.on();camStart();wake();say('Setting up. Look around while it works.');$('#prepNow').hidden=false}
 let tickT=0,openT=0;
 function prepared(){if(mstate!=='mounting')return;mp=1;mstate='opening';openT=0;$('#prepNow').hidden=true;
-  sfx.clunk();setTimeout(()=>sfx.chime(),260);fork.set((n,t)=>n.g.gain.setTargetAtTime(.015,t,.4));say('Ready.')}
+  sfx.chime();fork.set((n,t)=>n.g.gain.setTargetAtTime(.02,t,1.2));say('Ready.')}
 function fold(msg){mstate='idle';$('#prepNow').hidden=true;mountEl.classList.remove('opening');fork.off();camStop();sfx.fold();upArmed=false;go('face');say(msg||'',6000)}
 function tickMount(dt){
   if(mstate==='opening'){openT+=dt;const k=smooth(openT,0,3.2);mountEl.classList.add('opening');
     mountEl.style.setProperty('--p',k.toFixed(4));mountEl.style.setProperty('--iris',smooth(openT,.8,3.6).toFixed(4));
     if(openT>=3.6){mstate='ready';mountEl.classList.remove('opening');mountEl.classList.add('ready');sfx.click();$('#nolens').hidden=camOK;
-      say(camOK?'Raise it and frame. Press and hold anywhere to shoot.':'Choose the plate.')}return}
+      say(camOK?'Frame it. Turn the crank to zoom.':'Choose the plate.')}return}
   if(mstate!=='mounting')return;
   const T=mountSecs();mt+=dt;mp=Math.min(1,mp+dt/T);                 /* the camera sets itself up; you just look */
-  tickT+=dt;if(tickT>=1){tickT-=1;sfx.tick(mt)}
-  const ph=(mt%10)/10,breath=ph<.4?(.5-.5*Math.cos(Math.PI*ph/.4)):(.5+.5*Math.cos(Math.PI*(ph-.4)/.6));
-  fork.set((n,t)=>{n.g.gain.setTargetAtTime(.022+.03*breath,t,.25);n.o1.frequency.setTargetAtTime(216,t,.2);n.o2.frequency.setTargetAtTime(324,t,.2)});
+  const ph=(mt%10)/10,breath=ph<.4?(.5-.5*Math.cos(Math.PI*ph/.4)):(.5+.5*Math.cos(Math.PI*(ph-.4)/.6)),ci=Math.floor(mt/9)%CHORDS.length;
+  fork.set((n,t)=>{n.g.gain.setTargetAtTime(Math.min(1,mt/6)*(.05+.03*breath),t,.6);   /* fades in, then breathes 4 s in, 6 s out */
+    if(n.chord!==ci){n.chord=ci;n.os.forEach(x=>x.o.frequency.setTargetAtTime(CHORDS[ci][x.i],t,1.6))}});
   if(mp>=1)prepared()}
 function analyse(c){const W=32,H=40,t=el('canvas');t.width=W;t.height=H;const x=t.getContext('2d',{willReadFrequently:true});x.drawImage(c,0,0,W,H);
   const d=x.getImageData(0,0,W,H).data,L=new Float32Array(W*H);let sum=0;
@@ -531,19 +556,26 @@ async function makePlate(src,guard,crop){const vw=src.videoWidth||src.naturalWid
 async function expose(){if(mstate!=='ready')return;const src=pick||(camOK?vf:null);
   if(!src){sfx.dry();return say('Choose a plate first.')}
   mstate='done';let crop=null;
-  if(!pick){const W=innerWidth,H=innerHeight,vw=vf.videoWidth,vh=vf.videoHeight,k=Math.max(W/vw,H/vh),ox=(W-vw*k)/2,oy=(H-vh*k)/2,r=.33*Math.min(W,H),side=Math.min(2*r/k,vw,vh);
-    crop={sx:clamp((W*.5-r-ox)/k,0,vw-side),sy:clamp((H*.44-r-oy)/k,0,vh-side),sw:side,sh:side}}
+  if(!pick){const W=innerWidth,H=innerHeight,vw=vf.videoWidth,vh=vf.videoHeight,k=Math.max(W/vw,H/vh),ox=(W-vw*k)/2,oy=(H-vh*k)/2,r=.33*Math.min(W,H),side=Math.min(2*r/(k*zoom),vw,vh);
+    crop={sx:clamp((W*.5-ox)/k-side/2,0,vw-side),sy:clamp((H*.44-oy)/k-side/2,0,vh-side),sw:side,sh:side}}
   const pl=await makePlate(src,!pick,crop);
   if(!pl||pl==='dark'){mstate='ready';sfx.dry();return say(pl?'The lens is covered.':'The lens sees nothing yet.')}
   const r=S.roll;r.ready=false;r.steps=0;r.dist=0;r.t0=Date.now();lastNotch=0;if(S.fix)S.fix.t=Date.now();save();
   const fl=$('#flash');fl.classList.remove('on');void fl.offsetWidth;fl.classList.add('on');
   sfx.shutter();sfx.advance();fork.off();say('Plate '+ROMAN[r.taken]+' exposed.');
   setTimeout(()=>fold(r.taken>=3?'The roll is full. End the walk when you are ready.':'Walk on. Your steps wind the next plate.'),1900)}
-(function squeeze(){const sq=$('#sq');let t=0;
-  mountEl.addEventListener('pointerdown',e=>{if(mstate!=='ready'||e.target.closest('button,input'))return;
-    sq.style.left=e.clientX+'px';sq.style.top=e.clientY+'px';sq.classList.remove('on');void sq.offsetWidth;sq.classList.add('on');
-    t=setTimeout(()=>{sq.classList.remove('on');expose()},650)});
-  ['pointerup','pointercancel','pointerleave'].forEach(k=>mountEl.addEventListener(k,()=>{clearTimeout(t);sq.classList.remove('on')}))})();
+let zoom=1,crankA=0;
+function setZoom(z){const prev=Math.round(zoom*10);zoom=clamp(z,1,4);const now10=Math.round(zoom*10);mountEl.style.setProperty('--z',zoom.toFixed(3));
+  $('#zoomOut').textContent=(now10/10).toFixed(1)+'\u00d7';$('#crank').setAttribute('aria-valuenow',(now10/10).toFixed(1));
+  if(now10!==prev){sfx.detent(now10);try{navigator.vibrate&&navigator.vibrate(4)}catch(e){}}}   /* iPhone web pages can't vibrate; native gets real detent haptics */
+(function shutterAndCrank(){$('#shutter').addEventListener('click',()=>{if(mstate==='ready')expose()});
+  const c=$('#crank');let last=null;
+  const ang=e=>{const r=c.getBoundingClientRect();return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))};
+  c.addEventListener('pointerdown',e=>{last=ang(e);c.setPointerCapture(e.pointerId);e.preventDefault()});
+  c.addEventListener('pointermove',e=>{if(last==null)return;const a=ang(e);let d=a-last;if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;last=a;
+    crankA+=d;c.style.setProperty('--a',(crankA*180/Math.PI).toFixed(1)+'deg');setZoom(zoom+d/(2*Math.PI)*.8)});   /* one full turn clockwise = +0.8x */
+  ['pointerup','pointercancel'].forEach(k=>c.addEventListener(k,()=>{last=null}));
+  c.addEventListener('keydown',e=>{if(e.key==='ArrowUp'||e.key==='ArrowRight')setZoom(zoom+.1);if(e.key==='ArrowDown'||e.key==='ArrowLeft')setZoom(zoom-.1)})})();
 function sampleScene(i){const c=el('canvas');c.width=720;c.height=960;const x=c.getContext('2d'),R=rng(1234+i*977);
   let g=x.createLinearGradient(0,0,0,960);g.addColorStop(0,['#1b2440','#3a2a4a','#20303a'][i%3]);g.addColorStop(.62,['#c9785a','#d99a6c','#86a89c'][i%3]);g.addColorStop(1,'#2a2420');
   x.fillStyle=g;x.fillRect(0,0,720,960);
@@ -766,8 +798,8 @@ function wire(){
   $('#hf').addEventListener('change',e=>{S.set.hf=e.target.value.trim();save()});
   $('#setBench').addEventListener('change',e=>{S.set.bench=e.target.checked;save()});$('#setManual').addEventListener('change',e=>{S.set.manual=e.target.checked;save()});
   $('#pickBtn').addEventListener('click',()=>$('#file').click());
-  $('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{pick=im;pickPrev.src=im.src;pickPrev.hidden=false;$('#nolens').hidden=true;say('Press and hold anywhere.')};im.src=URL.createObjectURL(f)});
-  $('#sampleBtn').addEventListener('click',()=>{const c=sampleScene(S.roll.taken);pick=c;pickPrev.src=c.toDataURL('image/jpeg',.8);pickPrev.hidden=false;$('#nolens').hidden=true;say('Press and hold anywhere.')});
+  $('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{pick=im;pickPrev.src=im.src;pickPrev.hidden=false;$('#nolens').hidden=true;say('Press the shutter.')};im.src=URL.createObjectURL(f)});
+  $('#sampleBtn').addEventListener('click',()=>{const c=sampleScene(S.roll.taken);pick=c;pickPrev.src=c.toDataURL('image/jpeg',.8);pickPrev.hidden=false;$('#nolens').hidden=true;say('Press the shutter.')});
   $('#demo').addEventListener('click',async()=>{A();if(!started)await begin();$('#shop').hidden=true;if(S.roll.pulled||S.roll.taken>=3)S.roll=fresh();
     S.roll.loaded=true;while(S.roll.taken<3)await makePlate(sampleScene(S.roll.taken),false);S.roll.ready=false;save();enterDark()});
   $('#copyLog').addEventListener('click',async()=>{known=(await DB.all()).filter(p=>p.dev);const t=logText(),o=$('#logOut');o.value=t;o.hidden=false;
