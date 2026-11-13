@@ -31,8 +31,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .leather::before{content:"";position:absolute;inset:12px;border:2px dashed rgba(201,162,74,.22);border-radius:24px;pointer-events:none}
 
 /* caption: the one line of ink the camera ever says */
+#tst{position:fixed;z-index:45;left:calc(env(safe-area-inset-left,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 6px);min-height:44px;padding:8px 10px;
+  background:none;border:0;color:var(--parch);opacity:.45;font:12px var(--type);letter-spacing:.1em;text-transform:uppercase}
+#tstMenu{position:fixed;z-index:46;left:calc(env(safe-area-inset-left,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 56px);display:flex;flex-direction:column;gap:8px;
+  padding:12px;border-radius:12px;background:rgba(20,13,8,.96);border:1px solid #6f5119;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+#tstMenu .ghost{color:var(--parch)}
 #cap{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);z-index:30;text-align:center;
-  font:italic 19px/1.3 var(--body);padding:0 26px;pointer-events:none;text-shadow:0 1px 10px #000,0 0 2px #000;transition:opacity .5s;text-wrap:balance}
+  font:italic 19px/1.3 var(--body);padding:0 84px;pointer-events:none;text-shadow:0 1px 10px #000,0 0 2px #000;transition:opacity .5s;text-wrap:balance}
 body[data-room=dark] #cap{color:#ffb9a6}
 
 /* brass */
@@ -85,7 +90,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
 /* ---- mounted camera ---- */
 #mount{background:#000;padding:0}
 #vf,#pickPrev{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;clip-path:circle(calc(var(--iris,0)*33vmin) at 50% 44%)}
-#mount.ready #vf,#mount.ready #pickPrev{clip-path:inset(7% 5% 14% 5% round 16px)}
+#mount.ready #vf,#mount.ready #pickPrev{clip-path:circle(33vmin at 50% 44%)}
 .bezel{position:absolute;left:50%;top:44%;width:74vmin;height:74vmin;translate:-50% -50%;border-radius:50%;
   background:conic-gradient(var(--brass-hi) calc(var(--p,0)*360deg),#3a2a12 0);
   -webkit-mask:radial-gradient(closest-side,transparent calc(100% - 11px),#000 calc(100% - 10px));mask:radial-gradient(closest-side,transparent calc(100% - 11px),#000 calc(100% - 10px))}
@@ -94,9 +99,9 @@ body[data-room=dark] #cap{color:#ffb9a6}
 @keyframes breathe{0%,100%{scale:.5;border-color:rgba(243,220,147,.25)}40%{scale:1;border-color:rgba(243,220,147,.9)}}
 #mount.wob .bezel{animation:shake .22s infinite alternate}
 @keyframes shake{from{rotate:-1.2deg}to{rotate:1.2deg}}
-#mount.ready .bezel,#mount.ready .breath{display:none}
+#mount.ready .breath{display:none}
 .corner{position:absolute;width:26px;height:26px;border:2px solid var(--brass-hi);opacity:0}
-#mount.ready .corner{opacity:.9}
+#mount .corner{display:none}
 .c1{left:8%;top:9%;border-right:0;border-bottom:0}.c2{right:8%;top:9%;border-left:0;border-bottom:0}
 .c3{left:8%;bottom:16%;border-right:0;border-top:0}.c4{right:8%;bottom:16%;border-left:0;border-top:0}
 #nolens{position:absolute;left:50%;top:44%;translate:-50% -50%;display:flex;flex-direction:column;gap:12px;align-items:center;z-index:3;text-align:center;width:min(80vw,300px)}
@@ -240,7 +245,8 @@ body[data-room=dark] #cap{color:#ffb9a6}
     </div>
     <button class="can" id="can">Hold to load a fresh roll</button>
     <button class="brass" id="raise" hidden>Raise the camera</button>
-    <button class="brass" id="pull" hidden>Hold to pull the roll</button>
+    <button class="brass" id="pull" hidden>Hold to end the walk</button>
+    <button class="brass" id="toDark" hidden>Enter the darkroom</button>
     <div class="foot"><button class="ghost" id="toAlbum" hidden>the drying line</button><button class="ghost" id="cog">workshop</button></div>
   </div>
 </section>
@@ -311,6 +317,8 @@ body[data-room=dark] #cap{color:#ffb9a6}
   </div>
 </div>
 
+<button id="tst" aria-label="Tester">tester</button>
+<div id="tstMenu" hidden><button class="brass" id="tstRoll">Start a new roll</button><button class="brass" id="tstAll">Erase everything</button><button class="ghost" id="tstClose">close</button></div>
 <div id="cap" aria-live="polite"></div>
 <div id="flash"></div>
 
@@ -348,9 +356,12 @@ let known=[];
 
 /* ---------- sound: everything is synthesised ---------- */
 let ac=null,master=null,nbuf=null;
-function A(){if(!ac){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ac=new C();master=ac.createGain();master.gain.value=.85;master.connect(ac.destination);
+function A(){if(!ac){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+    const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ac=new C();master=ac.createGain();master.gain.value=.85;master.connect(ac.destination);
     nbuf=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
-  if(ac.state==='suspended')ac.resume().catch(()=>{});return ac}
+  if(ac.state!=='running'){ac.resume().catch(()=>{});try{const b=ac.createBuffer(1,1,22050),x=ac.createBufferSource();x.buffer=b;x.connect(ac.destination);x.start(0)}catch(e){}}
+  return ac}
+['pointerdown','touchend','click'].forEach(k=>document.addEventListener(k,()=>A(),{capture:true,passive:true}));
 function tone(f,dur,o={}){const a=ac;if(!a)return;const t=a.currentTime+(o.at||0),os=a.createOscillator(),g=a.createGain();os.type=o.type||'sine';
   os.frequency.setValueAtTime(f,t);if(o.to)os.frequency.exponentialRampToValueAtTime(o.to,t+dur);
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(o.g||.15,t+(o.a||.006));g.gain.exponentialRampToValueAtTime(.0001,t+dur);
@@ -441,21 +452,22 @@ function drawFace(c){const r=S.roll;
   if(Math.abs(c-lastC)>.004||c===1){lastC=c;needle.style.transform=`rotate(${-120+240*c}deg)`}
   needle.classList.toggle('full',r.ready&&r.taken<3);
   strip.style.transform=`translateY(${-42*r.taken}px)`;
-  $('#can').hidden=r.loaded;$('#pull').hidden=!(r.taken>0);
-  $('#raise').hidden=!(manual()&&r.loaded&&r.taken<3&&r.ready);
+  $('#can').hidden=r.loaded||r.ended;$('#pull').hidden=!(r.taken>0)||r.ended;$('#toDark').hidden=!r.ended;
+  $('#raise').hidden=!(manual()&&r.loaded&&r.taken<3&&r.ready&&!r.ended);
   $('#toAlbum').hidden=!known.length;
   const cp=$('#compass');let near=null;
   if(S.fix&&M.heading!=null)for(const p of known){if(p.lat==null)continue;const d=hav(S.fix,p);if(!near||d<near.d)near={d,p}}
   cp.hidden=!near;if(near){$('#cneedle').style.transform=`rotate(${bearing(S.fix,near.p)-M.heading}deg)`;$('#paces').textContent=Math.round(near.d/.75)+' paces'}}
-function tickFace(dt){const r=S.roll,c=charge();
-  if(!r.ready&&r.taken<3){const n=Math.floor(c*5);if(n>lastNotch&&c<1)sfx.ratchet();lastNotch=n;
+function tickFace(dt){const r=S.roll,c=r.ended?0:charge();
+  if(!r.ended&&!r.ready&&r.taken<3){const n=Math.floor(c*5);if(n>lastNotch&&c<1)sfx.ratchet();lastNotch=n;
     if(c>=1){r.ready=true;save();sfx.hiss();say('A plate is wound.',6000)}}
   drawFace(c);
   if(!manual()){if(lowered())upArmed=true;
     if(raised()&&still()&&upArmed){raiseT+=dt;if(raiseT>.9){raiseT=0;upArmed=false;tryRaise()}}else raiseT=0}}
 function loadRoll(){if(S.roll.loaded)return;S.roll.loaded=true;S.roll.t0=Date.now();save();sfx.click();sfx.chime();say('A fresh roll. The first plate is yours.',6000)}
 function tryRaise(){const r=S.roll;
-  if(r.taken>=3){sfx.dry();return say('The roll is full. Pull it out.',5000)}
+  if(r.ended){sfx.dry();return say('The roll is sealed. Develop it when you are home.',5000)}
+  if(r.taken>=3){sfx.dry();return say('The roll is full. End the walk when you are ready.',5000)}
   if(!r.ready){sfx.dry();return say('Not wound yet. Keep walking.',5000)}
   enterMount()}
 
@@ -497,20 +509,23 @@ function analyse(c){const W=32,H=40,t=el('canvas');t.width=W;t.height=H;const x=
     m/=w*w;const sc=m+Math.sqrt(Math.max(0,m2/(w*w)-m*m))*.6+Math.random()*5;
     if(!best||sc<best.sc)best={sc,x:(xx+w/2)/W*100,y:(y+w/2)/H*100}}
   return{mean:sum/(W*H),nook:best?{x:clamp(best.x,22,78),y:clamp(best.y,30,80)}:{x:50,y:64}}}
-async function makePlate(src,guard){const vw=src.videoWidth||src.naturalWidth||src.width,vh=src.videoHeight||src.naturalHeight||src.height;
-  if(!vw)return null;const k=Math.min(1,1400/Math.max(vw,vh)),c=el('canvas');c.width=Math.round(vw*k);c.height=Math.round(vh*k);
-  c.getContext('2d').drawImage(src,0,0,c.width,c.height);const an=analyse(c);if(guard&&an.mean<9)return'dark';
+async function makePlate(src,guard,crop){const vw=src.videoWidth||src.naturalWidth||src.width,vh=src.videoHeight||src.naturalHeight||src.height;
+  if(!vw)return null;const q=crop||{sx:0,sy:0,sw:vw,sh:vh},k=Math.min(1,1400/Math.max(q.sw,q.sh)),c=el('canvas');c.width=Math.round(q.sw*k);c.height=Math.round(q.sh*k);
+  c.getContext('2d').drawImage(src,q.sx,q.sy,q.sw,q.sh,0,0,c.width,c.height);const an=analyse(c);if(guard&&an.mean<9)return'dark';
   const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.86)),r=S.roll;r.taken++;
   const pl={id:r.id+'-'+r.taken,roll:r.id,n:r.taken,t:Date.now(),w:c.width,h:c.height,blob,lat:S.fix?S.fix.lat:null,lon:S.fix?S.fix.lon:null,nook:an.nook,dev:false};
   await DB.put(pl);return pl}
 async function expose(){if(mstate!=='ready')return;const src=pick||(camOK?vf:null);
   if(!src){sfx.dry();return say('Choose a plate first.')}
-  mstate='done';const pl=await makePlate(src,!pick);
+  mstate='done';let crop=null;
+  if(!pick){const W=innerWidth,H=innerHeight,vw=vf.videoWidth,vh=vf.videoHeight,k=Math.max(W/vw,H/vh),ox=(W-vw*k)/2,oy=(H-vh*k)/2,r=.33*Math.min(W,H),side=Math.min(2*r/k,vw,vh);
+    crop={sx:clamp((W*.5-r-ox)/k,0,vw-side),sy:clamp((H*.44-r-oy)/k,0,vh-side),sw:side,sh:side}}
+  const pl=await makePlate(src,!pick,crop);
   if(!pl||pl==='dark'){mstate='ready';sfx.dry();return say(pl?'The lens is covered.':'The lens sees nothing yet.')}
   const r=S.roll;r.ready=false;r.steps=0;r.dist=0;r.t0=Date.now();lastNotch=0;if(S.fix)S.fix.t=Date.now();save();
   const fl=$('#flash');fl.classList.remove('on');void fl.offsetWidth;fl.classList.add('on');
   sfx.shutter();sfx.advance();fork.off();say('Plate '+ROMAN[r.taken]+' exposed.');
-  setTimeout(()=>fold(r.taken>=3?'The roll is full. Pull it out when you sit down.':'Walk on. Your steps wind the next plate.'),1900)}
+  setTimeout(()=>fold(r.taken>=3?'The roll is full. End the walk when you are ready.':'Walk on. Your steps wind the next plate.'),1900)}
 (function squeeze(){const sq=$('#sq');let t=0;
   mountEl.addEventListener('pointerdown',e=>{if(mstate!=='ready'||e.target.closest('button,input'))return;
     sq.style.left=e.clientX+'px';sq.style.top=e.clientY+'px';sq.classList.remove('on');void sq.offsetWidth;sq.classList.add('on');
@@ -680,7 +695,7 @@ function tickDark(dt){let g;if(M.have&&!S.set.manual)g=clamp(M.gamma,-40,40);els
   darkEl.style.setProperty('--tilt',(g*.11).toFixed(2));darkEl.style.setProperty('--slosh',(g/40).toFixed(3));
   slosh.set((n,t)=>{n.g.gain.setTargetAtTime(dk.stage==='dev'?dk.energy*.16:0,t,.12);n.f.frequency.setTargetAtTime(450+dk.energy*900,t,.1)});
   if(dk.stage!=='dev')return;
-  let np=dk.p+(.011+dk.energy*.09)*dt;
+  let np=dk.p+(.05+dk.energy*.42)*dt;
   if(np>.84&&!dk.cr){np=Math.max(dk.p,Math.min(np,.84));dk.stall+=dt;       /* the photo is up; wait for whoever is hiding in it */
     if(dk.stall>4&&!dk.told){dk.told=true;say('Something is taking shape. Keep rocking.')}
     if(dk.stall>35){dk.cr=localCreature(dk.cur.pl);addLayers(dk.cur.pr,dk.cr)}}
@@ -723,10 +738,12 @@ function logText(){const by={};known.forEach(p=>(by[p.roll]=by[p.roll]||[]).push
 function senseOut(){const o=$('#senseOut');if(!started)return;
   o.innerHTML=M.have?`Motion permission: ${M.perm}<br>Tilt from upright: ${upright().toFixed(0)}° ${raised()?'(raised)':lowered()?'(lowered)':''}<br>Steadiness: ${M.rot.toFixed(1)} °/s ${still()?'(still)':'(moving)'}<br>Steps this plate: ${S.roll.steps}`
     :`Motion permission: ${esc(M.perm)}<br>No motion data is arriving, so the camera uses buttons. On iPhone: Settings → Apps → Safari → Motion &amp; Orientation Access must be on, then reload and tap Take the camera.`}
+function hardStop(){hum.off();slosh.off();fork.off();camStop();mstate='idle';dk.stage='off';dk.cur=null;$('#shop').hidden=true;$('#tstMenu').hidden=true;lastC=-1;lastNotch=0}
 function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);$('#hf').value=S.set.hf;$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
   $('#logOut').hidden=true;$('#erase').textContent='Erase everything';$('#shop').hidden=false}
 function wire(){
-  $('#take').addEventListener('click',take);holdable($('#can'),600,loadRoll);holdable($('#pull'),700,()=>{sfx.click();sfx.fold();enterDark()});
+  $('#take').addEventListener('click',take);holdable($('#can'),600,loadRoll);holdable($('#pull'),700,()=>{S.roll.ended=true;S.roll.ready=false;save();sfx.click();sfx.fold();setTimeout(()=>sfx.chime(),500);say('Walk ended. The roll is sealed. Develop it when you are home.',8000)});
+  $('#toDark').addEventListener('click',()=>{sfx.click();enterDark()});
   $('#raise').addEventListener('click',tryRaise);$('#lower').addEventListener('click',()=>fold('Folded.'));
   $('#cog').addEventListener('click',openShop);$('#shut').addEventListener('click',()=>{$('#shop').hidden=true});
   $('#toAlbum').addEventListener('click',enterAlbum);$('#backCam').addEventListener('click',()=>{go('face');say(S.roll.loaded?'':'Hold the canister to load a fresh roll.',7000)});
@@ -741,6 +758,11 @@ function wire(){
     S.roll.loaded=true;while(S.roll.taken<3)await makePlate(sampleScene(S.roll.taken),false);S.roll.ready=false;save();enterDark()});
   $('#copyLog').addEventListener('click',async()=>{known=(await DB.all()).filter(p=>p.dev);const t=logText(),o=$('#logOut');o.value=t;o.hidden=false;
     try{await navigator.clipboard.writeText(t);$('#copyLog').textContent='Copied'}catch(e){o.select()}setTimeout(()=>{$('#copyLog').textContent='Copy walk log'},2000)});
+  $('#tst').addEventListener('click',()=>{const m=$('#tstMenu');m.hidden=!m.hidden;$('#tstAll').textContent='Erase everything'});
+  $('#tstClose').addEventListener('click',()=>{$('#tstMenu').hidden=true});
+  $('#tstRoll').addEventListener('click',()=>{hardStop();S.roll=fresh();save();go(started?'face':'case');say(started?'A clean roll. Hold the canister to load it.':'',6000)});
+  let tArm=0;$('#tstAll').addEventListener('click',async e=>{if(Date.now()-tArm>4000){tArm=Date.now();e.target.textContent='Tap again: erases every print';return}
+    hardStop();await DB.clear();known=[];S.roll=fresh();S.fix=null;save();go(started?'face':'case');say('Everything erased.',5000)});
   let armed=0;$('#erase').addEventListener('click',async e=>{if(Date.now()-armed>4000){armed=Date.now();e.target.textContent='Tap again to erase all plates';return}
     await DB.clear();known=[];S.roll=fresh();S.fix=null;save();e.target.textContent='Erased';lastC=-1;if(started)go('face')})}
 
@@ -755,7 +777,7 @@ async function take(){A();sfx.click();const ps=[];                 /* iOS only g
   const pr=await Promise.allSettled(ps);M.perm=!ps.length?'not needed':pr.every(r=>r.status==='fulfilled'&&r.value==='granted')?'granted':pr.map(r=>r.status==='fulfilled'?r.value:'error').join(' / ');
   await cam;await begin();sfx.creak();
   if(S.roll.pulled)return enterDark();
-  go('face');say(S.roll.loaded?(S.roll.ready?'Raise it to your eye when something catches you.':'Walk on. Your steps wind the next plate.'):'Hold the canister to load a fresh roll.',9000)}
+  go('face');say(S.roll.ended?'The roll is sealed. Enter the darkroom when you are home.':S.roll.loaded?(S.roll.ready?'Raise it to your eye when something catches you.':'Walk on. Your steps wind the next plate.'):'Hold the canister to load a fresh roll.',9000)}
 let last=now();
 function loop(){const t=now(),dt=Math.min(.1,(t-last)/1000);last=t;
   if(!$('#shop').hidden)senseOut();
