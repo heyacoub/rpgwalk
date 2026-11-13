@@ -41,7 +41,8 @@ Load → walk → unfold → mount → squeeze → wind → pull the roll → da
 ![mounting](screens/04-mounting.png) ![mounted](screens/06-mounted.png)
 
 - **Unfold:** raise the phone upright (tilt between 68° and 125°) and hold still for 0.9 s. A wooden creak, then a click. **Claude.** In the voice session we discussed flipping the phone face-up to unfold it. Raising works upright in portrait or sideways like a camera (fixed 11 Nov from Yacoub's sensor recordings). It was chosen because it's more reliable coming out of a pocket and doubles as the start of the mount.
-- **Mount:** 60 s of stillness. **Yacoub** asked for a setup of a minute or two, time to observe mindfully. 60 s is the low end so the first test isn't tedious.
+- **Revised 13 Nov (Yacoub): the setup minute is mechanical and needs nothing from you.** Tap "Prepare the camera" (or raise it). For 60 s the screen shows only three dim brass gears turning, with a soft clockwork tick and the faint breathing tone. No ring, no progress, no need to hold still or keep it raised, so you can look at the thing itself. When it's ready: a clunk and a chime, then the brass ring fills and the iris opens onto the viewfinder (about 3.5 s), then press and hold to shoot. "Put it away" at the top cancels. A small "prepare now" text button, bottom-left, skips the minute for testing. What follows below is the v0 design it replaced.
+- **Mount (v0):** 60 s of stillness. **Yacoub** asked for a setup of a minute or two, time to observe mindfully. 60 s is the low end so the first test isn't tedious.
   - A brass ring fills as you hold still.
   - A breathing circle paces 4 s in and 6 s out. **Claude.**
   - A soft tuning-fork tone breathes with the circle and rises in pitch as the mount completes. When you wobble, the tone wavers and the ring shakes. **Claude.**

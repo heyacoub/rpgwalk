@@ -94,12 +94,22 @@ body[data-room=dark] #cap{color:#ffb9a6}
 .bezel{position:absolute;left:50%;top:44%;width:74vmin;height:74vmin;translate:-50% -50%;border-radius:50%;
   background:conic-gradient(var(--brass-hi) calc(var(--p,0)*360deg),#3a2a12 0);
   -webkit-mask:radial-gradient(closest-side,transparent calc(100% - 11px),#000 calc(100% - 10px));mask:radial-gradient(closest-side,transparent calc(100% - 11px),#000 calc(100% - 10px))}
-.breath{position:absolute;left:50%;top:44%;width:40vmin;height:40vmin;translate:-50% -50%;border-radius:50%;border:2px solid rgba(243,220,147,.6);
+.breath{display:none;position:absolute;left:50%;top:44%;width:40vmin;height:40vmin;translate:-50% -50%;border-radius:50%;border:2px solid rgba(243,220,147,.6);
   box-shadow:0 0 30px rgba(243,220,147,.25),inset 0 0 30px rgba(243,220,147,.15);animation:breathe 10s ease-in-out infinite;opacity:calc(1 - var(--iris,0))}
 @keyframes breathe{0%,100%{scale:.5;border-color:rgba(243,220,147,.25)}40%{scale:1;border-color:rgba(243,220,147,.9)}}
 #mount.wob .bezel{animation:shake .22s infinite alternate}
 @keyframes shake{from{rotate:-1.2deg}to{rotate:1.2deg}}
-#mount.ready .breath{display:none}
+#mount .bezel{opacity:0;transition:opacity .5s}#mount.opening .bezel,#mount.ready .bezel{opacity:1}
+.works{position:absolute;left:50%;top:44%;width:56vmin;height:40vmin;translate:-50% -50%;opacity:.42;transition:opacity 1s}
+#mount.opening .works,#mount.ready .works{opacity:0}
+.gear{position:absolute;border-radius:50%;border:solid #8a6a22;border-style:dotted;box-shadow:inset 0 0 0 6px #3a2a12,inset 0 0 0 9px #8a6a22;animation:turn var(--sp) linear infinite}
+.gear::after{content:"";position:absolute;inset:38%;border-radius:50%;background:#c9a24a}
+.g1{width:26vmin;height:26vmin;left:4vmin;top:6vmin;border-width:2.6vmin;--sp:14s}
+.g2{width:17vmin;height:17vmin;left:29vmin;top:2vmin;border-width:2vmin;--sp:9.1s;animation-direction:reverse}
+.g3{width:12vmin;height:12vmin;left:38vmin;top:20vmin;border-width:1.6vmin;--sp:6.4s}
+@keyframes turn{to{rotate:360deg}}
+#prepNow{position:fixed;z-index:44;left:calc(env(safe-area-inset-left,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 50px);min-height:44px;padding:8px 10px;
+  background:none;border:0;color:var(--parch);opacity:.45;font:12px var(--type);letter-spacing:.1em;text-transform:uppercase;text-decoration:underline}
 .corner{position:absolute;width:26px;height:26px;border:2px solid var(--brass-hi);opacity:0}
 #mount .corner{display:none}
 .c1{left:8%;top:9%;border-right:0;border-bottom:0}.c2{right:8%;top:9%;border-left:0;border-bottom:0}
@@ -244,7 +254,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
       <div class="win" id="compass" hidden><span id="paces">near</span><div class="rose"><i id="cneedle"></i></div></div>
     </div>
     <button class="can" id="can">Hold to load a fresh roll</button>
-    <button class="brass" id="raise" hidden>Raise the camera</button>
+    <button class="brass" id="raise" hidden>Prepare the camera</button>
     <button class="brass" id="pull" hidden>Hold to end the walk</button>
     <button class="brass" id="toDark" hidden>Enter the darkroom</button>
     <div class="foot"><button class="ghost" id="toAlbum" hidden>the drying line</button><button class="ghost" id="cog">workshop</button></div>
@@ -254,7 +264,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
 <section class="room" id="mount">
   <video id="vf" playsinline muted autoplay></video>
   <img id="pickPrev" alt="" hidden>
-  <div class="bezel"></div><div class="breath"></div>
+  <div class="bezel"></div><div class="works" aria-hidden="true"><i class="gear g1"></i><i class="gear g2"></i><i class="gear g3"></i></div>
   <i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i>
   <div id="nolens" hidden>
     <p>This device gave the camera no lens.</p>
@@ -262,7 +272,8 @@ body[data-room=dark] #cap{color:#ffb9a6}
     <button class="brass" id="sampleBtn">Use a sample plate</button>
     <input type="file" id="file" accept="image/*" capture="environment" hidden>
   </div>
-  <button class="ghost" id="lower" hidden>lower the camera</button>
+  <button class="ghost" id="lower">put it away</button>
+  <button id="prepNow" hidden>prepare now</button>
   <div id="sq"></div>
 </section>
 
@@ -375,6 +386,8 @@ const sfx={
   bell(){tone(1568,1.7,{g:.08});tone(2349,1.2,{g:.035,at:.03})},
   click(){air(.03,{f:3200,q:2,g:.34});tone(180,.05,{g:.12,type:'triangle'})},
   ratchet(){for(let i=0;i<3;i++)air(.025,{f:2600+i*320,q:3,g:.2,at:i*.065})},
+  tick(t){air(.018,{f:Math.floor(t)%2?2400:1900,q:5,g:.07});tone(Math.floor(t)%2?1100:900,.03,{g:.012,type:'triangle'})},
+  clunk(){tone(95,.25,{g:.28,type:'triangle'});air(.06,{f:700,q:1.2,g:.35});air(.03,{f:2600,q:2,g:.3,at:.12});tone(1320,.5,{g:.03,at:.12})},
   dry(){tone(140,.07,{g:.1,type:'square'});air(.045,{f:900,q:1,g:.15})},
   creak(){tone(90,.7,{to:250,type:'sawtooth',g:.03,a:.12});air(.62,{f:500,to:1500,q:7,g:.1,a:.08});air(.03,{f:3200,q:2,g:.3,at:.66})},
   fold(){air(.34,{f:1300,to:420,q:5,g:.08,a:.04});air(.03,{f:2800,q:2,g:.3,at:.32})},
@@ -453,7 +466,7 @@ function drawFace(c){const r=S.roll;
   needle.classList.toggle('full',r.ready&&r.taken<3);
   strip.style.transform=`translateY(${-42*r.taken}px)`;
   $('#can').hidden=r.loaded||r.ended;$('#pull').hidden=!(r.taken>0)||r.ended;$('#toDark').hidden=!r.ended;
-  $('#raise').hidden=!(manual()&&r.loaded&&r.taken<3&&r.ready&&!r.ended);
+  $('#raise').hidden=!(r.taken<3&&r.ready&&!r.ended);
   $('#toAlbum').hidden=!known.length;
   const cp=$('#compass');let near=null;
   if(S.fix&&M.heading!=null)for(const p of known){if(p.lat==null)continue;const d=hav(S.fix,p);if(!near||d<near.d)near={d,p}}
@@ -483,23 +496,23 @@ async function camStart(){camOK=false;try{
 function camStop(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}vf.srcObject=null;camOK=false}
 function enterMount(){if(!S.roll.loaded){S.roll.loaded=true;save();sfx.chime()}
   mp=0;mt=0;lowT=0;darkRun=0;mstate='mounting';pick=null;pickPrev.hidden=true;mountEl.classList.remove('ready','wob');$('#nolens').hidden=true;
-  mountEl.style.setProperty('--p',0);mountEl.style.setProperty('--iris',0);
-  go('mount');sfx.creak();fork.on();camStart();wake();say('Hold still. Look.');$('#lower').hidden=!manual()}
-function fold(msg){mstate='idle';fork.off();camStop();sfx.fold();upArmed=false;go('face');say(msg||'',6000)}
+  mountEl.classList.remove('opening');mountEl.style.setProperty('--p',0);mountEl.style.setProperty('--iris',0);tickT=0;
+  go('mount');sfx.creak();fork.on();camStart();wake();say('Setting up. Look around while it works.');$('#prepNow').hidden=false}
+let tickT=0,openT=0;
+function prepared(){if(mstate!=='mounting')return;mp=1;mstate='opening';openT=0;$('#prepNow').hidden=true;
+  sfx.clunk();setTimeout(()=>sfx.chime(),260);fork.set((n,t)=>n.g.gain.setTargetAtTime(.015,t,.4));say('Ready.')}
+function fold(msg){mstate='idle';$('#prepNow').hidden=true;mountEl.classList.remove('opening');fork.off();camStop();sfx.fold();upArmed=false;go('face');say(msg||'',6000)}
 function tickMount(dt){
-  if(!manual()){if(lowered()){lowT+=dt;if(lowT>1.1&&mstate!=='done')return fold(mstate==='ready'?'Folded. The plate is still wound.':'Folded. No plate spent.')}else lowT=0}
-  if(camOK&&!manual()&&mstate!=='done'){darkT=(darkT||0)+dt;if(darkT>.5){darkT=0;darkRun=lensDark()?darkRun+.5:0;if(darkRun>=2)return fold('')}}
+  if(mstate==='opening'){openT+=dt;const k=smooth(openT,0,3.2);mountEl.classList.add('opening');
+    mountEl.style.setProperty('--p',k.toFixed(4));mountEl.style.setProperty('--iris',smooth(openT,.8,3.6).toFixed(4));
+    if(openT>=3.6){mstate='ready';mountEl.classList.remove('opening');mountEl.classList.add('ready');sfx.click();$('#nolens').hidden=camOK;
+      say(camOK?'Raise it and frame. Press and hold anywhere to shoot.':'Choose the plate.')}return}
   if(mstate!=='mounting')return;
-  const st=manual()||(still()&&raised()),T=mountSecs();mt+=dt;
-  if(st)mp=Math.min(1,mp+dt/T);
-  const left=(1-mp)*T;mountEl.style.setProperty('--p',mp.toFixed(4));mountEl.style.setProperty('--iris',left<5?(1-left/5).toFixed(3):0);
-  mountEl.classList.toggle('wob',!st);
+  const T=mountSecs();mt+=dt;mp=Math.min(1,mp+dt/T);                 /* the camera sets itself up; you just look */
+  tickT+=dt;if(tickT>=1){tickT-=1;sfx.tick(mt)}
   const ph=(mt%10)/10,breath=ph<.4?(.5-.5*Math.cos(Math.PI*ph/.4)):(.5+.5*Math.cos(Math.PI*(ph-.4)/.6));
-  fork.set((n,t)=>{const w=st?0:(Math.random()-.5)*16,f=216*(1+.12*mp);
-    n.g.gain.setTargetAtTime(st?.03+.035*breath:.05,t,.25);n.o1.frequency.setTargetAtTime(f+w,t,.06);n.o2.frequency.setTargetAtTime(f*1.5+w*1.6,t,.06)});
-  if(mp>=1){mstate='ready';mountEl.classList.remove('wob');mountEl.classList.add('ready');sfx.chime();
-    fork.set((n,t)=>n.g.gain.setTargetAtTime(.015,t,.4));$('#nolens').hidden=camOK;
-    say(camOK?'Mounted. Press and hold anywhere.':'Mounted.')}}
+  fork.set((n,t)=>{n.g.gain.setTargetAtTime(.022+.03*breath,t,.25);n.o1.frequency.setTargetAtTime(216,t,.2);n.o2.frequency.setTargetAtTime(324,t,.2)});
+  if(mp>=1)prepared()}
 function analyse(c){const W=32,H=40,t=el('canvas');t.width=W;t.height=H;const x=t.getContext('2d',{willReadFrequently:true});x.drawImage(c,0,0,W,H);
   const d=x.getImageData(0,0,W,H).data,L=new Float32Array(W*H);let sum=0;
   for(let i=0;i<W*H;i++){L[i]=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2];sum+=L[i]}
@@ -738,13 +751,14 @@ function logText(){const by={};known.forEach(p=>(by[p.roll]=by[p.roll]||[]).push
 function senseOut(){const o=$('#senseOut');if(!started)return;
   o.innerHTML=M.have?`Motion permission: ${M.perm}<br>Tilt from upright: ${upright().toFixed(0)}° ${raised()?'(raised)':lowered()?'(lowered)':''}<br>Steadiness: ${M.rot.toFixed(1)} °/s ${still()?'(still)':'(moving)'}<br>Steps this plate: ${S.roll.steps}`
     :`Motion permission: ${esc(M.perm)}<br>No motion data is arriving, so the camera uses buttons. On iPhone: Settings → Apps → Safari → Motion &amp; Orientation Access must be on, then reload and tap Take the camera.`}
-function hardStop(){hum.off();slosh.off();fork.off();camStop();mstate='idle';dk.stage='off';dk.cur=null;$('#shop').hidden=true;$('#tstMenu').hidden=true;lastC=-1;lastNotch=0}
+function hardStop(){$('#prepNow').hidden=true;hum.off();slosh.off();fork.off();camStop();mstate='idle';dk.stage='off';dk.cur=null;$('#shop').hidden=true;$('#tstMenu').hidden=true;lastC=-1;lastNotch=0}
 function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);$('#hf').value=S.set.hf;$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
   $('#logOut').hidden=true;$('#erase').textContent='Erase everything';$('#shop').hidden=false}
 function wire(){
   $('#take').addEventListener('click',take);holdable($('#can'),600,loadRoll);holdable($('#pull'),700,()=>{S.roll.ended=true;S.roll.ready=false;save();sfx.click();sfx.fold();setTimeout(()=>sfx.chime(),500);say('Walk ended. The roll is sealed. Develop it when you are home.',8000)});
   $('#toDark').addEventListener('click',()=>{sfx.click();enterDark()});
-  $('#raise').addEventListener('click',tryRaise);$('#lower').addEventListener('click',()=>fold('Folded.'));
+  $('#raise').addEventListener('click',tryRaise);$('#lower').addEventListener('click',()=>fold(mstate==='mounting'?'Put away. No plate spent.':'Put away. The plate is still wound.'));
+  $('#prepNow').addEventListener('click',prepared);
   $('#cog').addEventListener('click',openShop);$('#shut').addEventListener('click',()=>{$('#shop').hidden=true});
   $('#toAlbum').addEventListener('click',enterAlbum);$('#backCam').addEventListener('click',()=>{go('face');say(S.roll.loaded?'':'Hold the canister to load a fresh roll.',7000)});
   $('#toLine').addEventListener('click',()=>{S.roll=fresh();save();lastC=-1;enterAlbum()});
