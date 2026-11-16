@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#140d08">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Camera">
 <title>The Magical Camera</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -192,7 +198,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
 /* a print: the photo plus whatever was hiding in it */
 .print{position:relative;width:100%;overflow:hidden;background:#fbfaf6}
 .print .photo{display:block;width:100%;height:100%;object-fit:cover}
-.dark:not(.lit) .print .photo{filter:grayscale(1) contrast(1.06)}
+.dark:not(.lit) .print .photo,.dark:not(.lit) .print .cl.full{filter:grayscale(1) contrast(1.06)}
 .dark.lit .print .photo{transition:filter 3.2s}
 .cl{position:absolute;left:calc(var(--x)*1%);top:calc(var(--y)*1%);width:calc(var(--w)*1%);aspect-ratio:1;translate:-50% -50%;mix-blend-mode:screen;pointer-events:none}
 .cl.feather{-webkit-mask-image:radial-gradient(closest-side,#000 52%,transparent 96%);mask-image:radial-gradient(closest-side,#000 52%,transparent 96%)}
@@ -226,6 +232,20 @@ body[data-room=dark] #cap{color:#ffb9a6}
 #mapNote{font:13px var(--type);opacity:.65;text-align:center;max-width:34ch;margin:0}
 
 /* ---- workshop ---- */
+#who{position:fixed;inset:0;z-index:48;background:rgba(10,6,3,.94);display:grid;place-items:center;overflow-y:auto;touch-action:pan-y;-webkit-user-select:text;user-select:text;
+  padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 18px max(16px,env(safe-area-inset-left))}
+#who[hidden]{display:none!important}
+#who .sheet{width:min(100%,420px)}
+#who label{font:13px var(--type);letter-spacing:.08em;text-transform:uppercase;min-height:0;margin-bottom:-8px}
+#who input{width:100%;font:22px var(--hand);padding:8px 10px;border:1px solid #6f5119;background:#f7f1de;color:#1d2a55;border-radius:4px;-webkit-user-select:text;user-select:text;touch-action:auto}
+#who input:focus-visible{outline:2px solid #6f5119}
+.err{color:#8a2a1c;font-style:italic}
+#who .ghost{color:var(--ink);opacity:.85}
+.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tab{min-height:40px;padding:6px 16px;border-radius:20px;border:1px solid #6f5119;background:none;color:var(--parch);font:15px var(--disp);letter-spacing:.05em}
+.tab[aria-pressed=true]{background:var(--brass);color:var(--ink)}
+#friends{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:92vw}
+.save{margin-top:6px;align-self:flex-start;min-height:44px;font-size:15px;padding:8px 16px}
 #shop{position:fixed;inset:0;z-index:40;background:rgba(10,6,3,.94);overflow-y:auto;touch-action:pan-y;-webkit-user-select:text;user-select:text;
   padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
 .sheet{max-width:520px;margin:0 auto;background:#ece2c6;color:var(--ink);padding:20px 18px;border-radius:6px;display:flex;flex-direction:column;gap:14px}
@@ -308,7 +328,9 @@ body[data-room=dark] #cap{color:#ffb9a6}
 
 <section class="room leather" id="album">
   <h2>The Drying Line</h2>
-  <p class="sub">Tap a print to read its back.</p>
+  <div class="tabs"><button class="tab" id="tabMine" aria-pressed="true">Mine</button><button class="tab" id="tabFriends" aria-pressed="false">Friends</button></div>
+  <div id="friends" hidden></div>
+  <p class="sub" id="albumSub">Tap a print to read its back.</p>
   <div id="cards"></div>
   <div id="map" hidden></div>
   <p id="mapNote"></p>
@@ -318,12 +340,12 @@ body[data-room=dark] #cap{color:#ffb9a6}
 <div id="shop" hidden>
   <div class="sheet">
     <h2>Workshop</h2>
+    <h3>Who's carrying the camera</h3>
+    <p id="whoLine">Not signed in. Creatures stay on this phone.</p>
+    <div class="btns"><button class="brass" id="whoBtn">Sign in</button></div>
     <h3>Who paints the creature</h3>
-    <label><input type="radio" name="eng" value="auto"><span><b>Best available.</b> Hugging Face if a token is set below, otherwise Pollinations, otherwise clockwork.</span></label>
-    <label><input type="radio" name="eng" value="clock"><span><b>Clockwork only.</b> Drawn on this phone. Nothing leaves it.</span></label>
-    <label><input type="radio" name="eng" value="polli"><span><b>Pollinations</b> (free, no account). Sends a short description: the mood and a few words from your reflection. Never the photo. One painting every 45 seconds.</span></label>
-    <label><input type="radio" name="eng" value="hf"><span><b>Hugging Face, FLUX.1 Kontext.</b> Paints the creature into the real photo. Sends the photo to Hugging Face. Needs your token.</span></label>
-    <input type="password" id="hf" placeholder="hf_… token (stays on this phone)" autocomplete="off">
+    <label><input type="radio" name="eng" value="auto"><span><b>The darkroom spirit.</b> Your photo and reflection go to the server, where a vision model reads the photo and an image model paints a creature into it. Needs you to be signed in. Falls back to clockwork.</span></label>
+    <label><input type="radio" name="eng" value="clock"><span><b>Clockwork only.</b> Drawn on this phone from your reflection. Nothing leaves it until you sign in to share.</span></label>
     <h3>Bench testing</h3>
     <label><input type="checkbox" id="setBench"><span>Fast mode: 8-second mount, 20-second wind.</span></label>
     <label><input type="checkbox" id="setManual"><span>Buttons instead of gestures.</span></label>
@@ -339,7 +361,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
     <ul>
       <li>Typefaces: IM Fell English and IM Fell English SC by Igino Marini, Caveat by Impallari Type (SIL Open Font License), Special Elite by Astigmatic (Apache 2.0), served by Google Fonts.</li>
       <li>Map: <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a> by Volodymyr Agafonkin (BSD-2). Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>.</li>
-      <li>Optional creature painting: <a href="https://pollinations.ai" target="_blank" rel="noopener">Pollinations.ai</a>; FLUX.1 Kontext [dev] by Black Forest Labs through Hugging Face Inference Providers.</li>
+      <li>Creature painting: a vision model (Qwen2.5-VL by Alibaba Qwen, or GLM-4.5V by Z.ai) reads the photo, and FLUX.1 Kontext [dev] by Black Forest Labs paints the creature in, both through Hugging Face Inference Providers. Accounts and storage: <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a>.</li>
       <li>Design references: the Professor Layton games (Level-5) for the hand-made puzzle-object feel, Wii-era gesture play (Nintendo), and the tray-rocking of a real wet darkroom.</li>
       <li>Every sound is synthesised in the browser. The camera, gauge, darkroom and clockwork creatures are drawn in code.</li>
     </ul>
@@ -347,6 +369,16 @@ body[data-room=dark] #cap{color:#ffb9a6}
   </div>
 </div>
 
+<div id="who" hidden>
+  <form class="sheet" id="whoForm" autocomplete="off">
+    <h2>Who's carrying the camera?</h2>
+    <p>Pick a name and a 4-digit PIN. Use the same two on any phone to get your creatures back. Friends see your creatures, never your reflections.</p>
+    <label for="whoName">Name</label><input id="whoName" type="text" inputmode="latin" maxlength="20" placeholder="e.g. yacoub" autocapitalize="none" spellcheck="false">
+    <label for="whoPin">PIN</label><input id="whoPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4 digits">
+    <p id="whoErr" class="err" hidden></p>
+    <div class="btns"><button class="brass" id="whoGo" type="submit">Sign in</button><button class="ghost" id="whoSkip" type="button">Not now</button></div>
+  </form>
+</div>
 <button id="tst" aria-label="Tester">tester</button>
 <div id="tstMenu" hidden><button class="brass" id="tstRoll">Start a new roll</button><button class="brass" id="tstAll">Erase everything</button><button class="ghost" id="tstClose">close</button></div>
 <div id="cap" aria-live="polite"></div>
@@ -371,7 +403,8 @@ const U=src=>{if(typeof src==='string')return src;let u=urls.get(src);if(!u){u=U
 const LS='magicCamera.v1';
 const fresh=()=>({id:'r'+Date.now().toString(36),loaded:false,taken:0,ready:true,steps:0,dist:0,t0:Date.now(),pulled:false,note:''});
 let S=null;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
-if(!S||S.v!==1)S={v:1,set:{engine:'auto',hf:'',bench:false,manual:false},roll:fresh(),fix:null};
+if(!S||S.v!==1)S={v:1,set:{engine:'auto',bench:false,manual:false},roll:fresh(),fix:null};
+if(S.set.engine!=='clock')S.set.engine='auto';if(!('user' in S))S.user=null;
 const save=()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}};
 const DB={mem:new Map(),db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('magicCamera',1);q.onupgradeneeded=()=>q.result.createObjectStore('plates',{keyPath:'id'});
@@ -471,7 +504,7 @@ function geoStart(){if(!navigator.geolocation)return;navigator.geolocation.watch
   const f={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,t:Date.now()},o=S.fix;
   if(o&&!S.roll.ready&&f.acc<60){const d=hav(o,f),dt=(f.t-o.t)/1000;
     if(d<5)return;                                   /* standing still: keep the old anchor */
-    if(dt<900&&d<=dt*2.4+12)S.roll.dist+=d}                  /* walking pace only: a car ride winds nothing */
+    if(d<=dt*2.4+12)S.roll.dist+=d}   /* also credits the gap after the phone was locked, at walking pace or slower */                  /* walking pace only: a car ride winds nothing */
   S.fix=f;save()},()=>{}, {enableHighAccuracy:true,maximumAge:5000,timeout:20000})}
 
 /* ---------- winding ---------- */
@@ -617,7 +650,7 @@ function traitsOf(text){const t={words:[]};for(const k in TRAITS)t[k]=TRAITS[k].
 const hexA=(h,a)=>`rgba(${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)},${a})`;
 function blobPath(x,p){x.beginPath();const m=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];const s=m(p[p.length-1],p[0]);x.moveTo(s[0],s[1]);
   for(let i=0;i<p.length;i++){const q=m(p[i],p[(i+1)%p.length]);x.quadraticCurveTo(p[i][0],p[i][1],q[0],q[1])}x.closePath()}
-function drawCreature(K,seed,tr){const R=rng(seed),N=420,mk=()=>{const c=el('canvas');c.width=c.height=N;const x=c.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,N,N);return[c,x]};
+function drawCreature(K,seed,tr){const R=rng(seed),N=420,mk=()=>{const c=el('canvas');c.width=c.height=N;return[c,c.getContext('2d')]};   /* transparent sheets: no black box */
   const[cb,b]=mk(),[ce,e]=mk(),sh=K.shape,cx=N/2,cy=N*.56;
   const rx=N*({round:.2,spiky:.19,droopy:.2,tall:.135,tear:.17,small:.13,bouncy:.175}[sh]),ry=rx*({tall:1.75,droopy:.86,tear:1.22}[sh]||1);
   let g=b.createRadialGradient(cx,cy,rx*.3,cx,cy,rx*2.7);g.addColorStop(0,hexA(K.col,.5));g.addColorStop(1,hexA(K.col,0));b.fillStyle=g;b.fillRect(0,0,N,N);
@@ -657,38 +690,53 @@ function drawCreature(K,seed,tr){const R=rng(seed),N=420,mk=()=>{const c=el('can
     e.fillStyle='#fff';e.shadowColor='#fff';e.shadowBlur=16;e.beginPath();e.ellipse(X,ey,er,er*1.08,0,0,7);e.fill();e.shadowBlur=0;
     e.fillStyle='#000';e.beginPath();e.arc(X+lx,ey+ly,er*(K.eye==='wide'?.26:.52),0,7);e.fill();
     e.fillStyle='#fff';e.beginPath();e.arc(X+lx-er*.2,ey+ly-er*.22,er*.13,0,7);e.fill();e.fillStyle='#000';
+    e.fillStyle=K.col;
     if(K.eye==='half')e.fillRect(X-er*1.4,ey-er*1.4,er*2.8,er*1.3);
     if(K.eye==='brow'){e.beginPath();e.moveTo(X+s*er*1.5,ey-er*1.7);e.lineTo(X-s*er*1.5,ey-er*1.7);e.lineTo(X-s*er*1.5,ey-er*.05);e.lineTo(X+s*er*1.5,ey-er*.95);e.fill()}
     if(K.eye==='sad'){e.beginPath();e.moveTo(X+s*er*1.5,ey-er*1.7);e.lineTo(X-s*er*1.5,ey-er*1.7);e.lineTo(X-s*er*1.5,ey-er*.9);e.lineTo(X+s*er*1.5,ey-er*.1);e.fill()}}
-  return{body:cb.toDataURL('image/jpeg',.9),eyes:ce.toDataURL('image/jpeg',.92)}}
+  b.drawImage(ce,0,0);return cb}
 const SY='o ru mi ka te lo na shi bu ra pi zu ha ne wi do fa yo'.split(' ');
 function describe(pl){const note=S.roll.note||pl.note||'',mood=moodOf(note),K=KINDS[mood],tr=traitsOf(note),seed=hash(pl.id+'|'+note),R=rng(seed^0x9e37);
   let nm='';for(let i=0,n=2+(R()<.4?1:0);i<n;i++)nm+=SY[Math.floor(R()*SY.length)];nm=nm[0].toUpperCase()+nm.slice(1);
   return{K,tr,seed,base:{mood,kind:K.kind,name:nm,line:K.line,col:K.col}}}
-function localCreature(pl){const{K,tr,seed,base}=describe(pl),d=drawCreature(K,seed,tr),at={x:pl.nook.x,y:pl.nook.y,w:42};
-  return{...base,by:'clockwork',layers:[{k:'body',src:d.body,...at},{k:'eyes',src:d.eyes,...at}]}}
-let polliNext=0;
-async function polli(K,tr,seed){const wait=polliNext-Date.now();if(wait>0)await sleep(wait);polliNext=Date.now()+46000;
-  const p=`a small shy ${K.adj} mythical spirit creature, ${K.look}, ${tr.words.length?'touched by '+tr.words.join(', ')+', ':''}softly glowing ${K.cn}, big expressive eyes, full body, centered, hand-painted storybook illustration, gouache, isolated on a pure black background, no text, no border`;
-  const u='https://image.pollinations.ai/prompt/'+encodeURIComponent(p)+'?width=512&height=512&seed='+(seed%100000);
-  let res=null;try{res=await fetch(u,{signal:AbortSignal.timeout?AbortSignal.timeout(40000):undefined})}catch(e){}
-  if(res){if(res.ok&&(res.headers.get('content-type')||'').startsWith('image'))return await res.blob();throw new Error('pollinations '+res.status)}
-  return new Promise((ok,no)=>{const im=new Image(),to=setTimeout(()=>no(new Error('slow')),40000);     /* no CORS: show it straight from their server */
-    im.onload=()=>{clearTimeout(to);ok(u)};im.onerror=()=>{clearTimeout(to);no(new Error('refused'))};im.src=u})}
-async function kontext(pl,K){const{InferenceClient}=await import('https://cdn.jsdelivr.net/npm/@huggingface/inference@4/+esm');
-  const where=(pl.nook.x<38?'left':pl.nook.x>62?'right':'middle')+', '+(pl.nook.y>62?'low down':'halfway up');
-  return await new InferenceClient(S.set.hf).imageToImage({model:'black-forest-labs/FLUX.1-Kontext-dev',inputs:pl.blob,
-    parameters:{prompt:`Add one small shy ${K.adj} mythical spirit creature, ${K.look}, softly glowing ${K.cn}, half hidden in the shadows at the ${where} of the scene, as if it lives there. Paint the creature in a hand-painted storybook style. Keep everything else in the photo exactly as it is.`}})}
-async function conjure(pl){const{K,tr,seed,base}=describe(pl),want=S.set.engine==='auto'?(S.set.hf?'hf':'polli'):S.set.engine;
-  try{
-    if(want==='hf'&&S.set.hf){const b=await Promise.race([kontext(pl,K),sleep(90000).then(()=>{throw new Error('slow')})]);return{...base,by:'kontext',layers:[{k:'full',src:b}]}}
-    if(want==='polli'||want==='hf'){const src=await polli(K,tr,seed);return{...base,by:'pollinations',layers:[{k:'body',src,x:pl.nook.x,y:pl.nook.y,w:46,feather:true}]}}
-  }catch(e){console.warn('Painter unavailable, using clockwork:',e&&e.message)}
-  return localCreature(pl)}
-function printEl(pl,cr){const d=el('div','print');d.style.aspectRatio=pl.w+' / '+pl.h;const ph=el('img','photo');ph.alt='';ph.src=U(pl.blob);d.append(ph);
-  if(cr||pl.cr)addLayers(d,cr||pl.cr);return d}
-function addLayers(d,cr){for(const l of cr.layers){const im=el('img','cl '+l.k+(l.feather?' feather':''));im.alt='';im.src=U(l.src);
-  if(l.k!=='full'){im.style.setProperty('--x',l.x);im.style.setProperty('--y',l.y);im.style.setProperty('--w',l.w)}d.append(im)}}
+const API='https://ogljcibwiaryxoviwabs.supabase.co/functions/v1/api',APIKEY='sb_publishable_CunxnxbcXcsv9tnBg4FIfA_7qxtzwUE';
+async function api(body,ms=120000){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',apikey:APIKEY,Authorization:'Bearer '+APIKEY},
+    body:JSON.stringify(body),signal:AbortSignal.timeout?AbortSignal.timeout(ms):undefined});
+  let j={};try{j=await r.json()}catch(e){}
+  if(r.status===401&&S.user){S.user=null;save()}
+  if(!r.ok)throw new Error(j.error||('server '+r.status));return j}
+const toB64=b=>new Promise((ok,no)=>{const f=new FileReader();f.onload=()=>ok(String(f.result).split(',')[1]);f.onerror=no;f.readAsDataURL(b)});
+async function shrink(blob,max){const im=await createImageBitmap(blob),k=Math.min(1,max/Math.max(im.width,im.height)),c=el('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);return new Promise(r=>c.toBlob(r,'image/jpeg',.88))}
+/* bake: one finished image, the creature painted into the photo */
+async function bake(pl,K,seed,tr){const im=await createImageBitmap(pl.blob),c=el('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);
+  const cr=drawCreature(K,seed,tr),w=c.width*.44,X=c.width*pl.nook.x/100,Y=c.height*pl.nook.y/100;
+  x.save();x.globalAlpha=.95;x.drawImage(cr,X-w/2,Y-w/2,w,w);x.restore();
+  return new Promise(r=>c.toBlob(r,'image/jpeg',.9))}
+function localMeta(pl){const{K,base}=describe(pl);return{...base,lore:base.line,subject:null}}
+async function conjure(pl){const note=S.roll.note||'',{K:K0,tr,seed}=describe(pl);let meta=null;
+  if(S.set.engine!=='clock'&&S.user&&navigator.onLine!==false){
+    try{const small=await shrink(pl.blob,1024),
+        r=await api({action:'conjure',token:S.user.token,photo:await toB64(small),reflection:note,plateId:pl.id,takenAt:pl.t,lat:pl.lat,lon:pl.lon});
+      meta=r.creature;meta.lore=meta.lore||'';
+      if(r.imageUrl){const img=await (await fetch(r.imageUrl)).blob();
+        return{kind:meta.kind,name:meta.name,mood:meta.mood,subject:meta.subject,line:meta.lore,col:(KINDS[meta.mood]||KINDS.quiet).col,by:meta.painter||'painter',final:img,synced:true}}
+    }catch(e){console.warn('Darkroom spirit unavailable, using clockwork:',e&&e.message)}}
+  const m=meta&&KINDS[meta.mood]?meta:null,K=m?KINDS[m.mood]:K0,b=localMeta(pl);
+  const cr={kind:m?m.kind||K.kind:b.kind,name:m?m.name||b.name:b.name,mood:m?m.mood:b.mood,subject:m?m.subject:null,line:m?m.lore||K.line:K.line,col:K.col,by:'clockwork',
+    final:await bake(pl,K,seed,tr),synced:false};
+  return cr}
+async function syncPlate(pl){if(!S.user||pl.synced||!pl.final||!pl.cr)return;
+  try{await api({action:'save',token:S.user.token,image:await toB64(await shrink(pl.final,1600)),plateId:pl.id,takenAt:pl.t,lat:pl.lat,lon:pl.lon,reflection:pl.note||'',
+      meta:{kind:pl.cr.kind,name:pl.cr.name,mood:pl.cr.mood,subject:pl.cr.subject,lore:pl.cr.line,painter:pl.cr.by}},60000);
+    pl.synced=true;await DB.put(pl)}catch(e){console.warn('sync later:',e&&e.message)}}
+async function syncAll(){if(!S.user)return;for(const pl of known)if(!pl.synced)await syncPlate(pl)}
+function printEl(pl,cr){const d=el('div','print');d.style.aspectRatio=pl.w+' / '+pl.h;const ph=el('img','photo');ph.alt='';ph.src=U(pl.final||pl.blob);d.append(ph);return d}
+function addFinal(d,src){const im=el('img','cl full');im.alt='';im.src=U(src);d.append(im)}
+async function saveImage(src,name){try{const blob=typeof src==='string'?await (await fetch(src)).blob():src,file=new File([blob],name.replace(/[^a-z0-9 _-]/gi,'')+'.jpg',{type:blob.type||'image/jpeg'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}
+    const a=el('a');a.href=URL.createObjectURL(file);a.download=file.name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
+  catch(e){if(e&&e.name!=='AbortError')say('Could not save the image.',4000)}}
 
 /* ---------- the darkroom ---------- */
 const darkEl=$('#dark'),lineEl=$('#line'),benchEl=$('#bench');
@@ -729,7 +777,7 @@ function showTray(){benchEl.innerHTML=`<div class="tray" id="tray"><div class="b
 function startPlate(){const pl=dk.plates[dk.i],paper=$('#paper');dk.p=0;dk.cr=null;dk.stall=0;dk.told=false;
   paper.className='paper';paper.innerHTML='';paper.style.width=`min(80%, ${42*pl.w/pl.h}vh)`;
   const pr=printEl(pl);pr.classList.add('dev');pr.querySelector('.photo').style.opacity=0;paper.append(pr);dk.cur={pl,pr};$('#lift').hidden=true;
-  conjure(pl).then(c=>{if(dk.cur&&dk.cur.pl===pl&&!dk.cr){dk.cr=c;addLayers(pr,c);renderDev()}});
+  conjure(pl).then(c=>{if(dk.cur&&dk.cur.pl===pl&&!dk.cr){dk.cr=c;addFinal(pr,c.final);renderDev()}});
   dk.stage='dev';slosh.on();say(dk.i?'The next plate. Rock the tray.':(M.have?'Your words are in the water. Tilt the phone to rock the tray.':'Your words are in the water. Drag the tray side to side.'))}
 function renderDev(){if(!dk.cur)return;const p=dk.p,pr=dk.cur.pr,ph=pr.querySelector('.photo'),q=smooth(p,.06,.8);
   ph.style.opacity=smooth(p,.06,.6);ph.style.filter=`grayscale(1) contrast(${lerp(.3,1.06,q).toFixed(3)}) brightness(${lerp(2.6,1,q).toFixed(3)})`;
@@ -743,9 +791,9 @@ function tickDark(dt){let g;if(M.have&&!S.set.manual)g=clamp(M.gamma,-40,40);els
   let np=dk.p+(.05+dk.energy*.42)*dt;
   if(np>.84&&!dk.cr){np=Math.max(dk.p,Math.min(np,.84));dk.stall+=dt;       /* the photo is up; wait for whoever is hiding in it */
     if(dk.stall>4&&!dk.told){dk.told=true;say('Something is taking shape. Keep rocking.')}
-    if(dk.stall>35){dk.cr=localCreature(dk.cur.pl);addLayers(dk.cur.pr,dk.cr)}}
+    if(dk.stall>150){dk.stall=-1e9;say('The spirit is slow tonight. Keep rocking.')}}
   dk.p=Math.min(1,np);renderDev();if(dk.p>=1)developed()}
-async function developed(){dk.stage='done';const{pl,pr}=dk.cur,cr=dk.cr;pl.cr=cr;pl.dev=true;pl.note=S.roll.note;await DB.put(pl);
+async function developed(){dk.stage='done';const{pl,pr}=dk.cur,cr=dk.cr;pl.final=cr.final;pl.synced=cr.synced;pl.cr={...cr,final:undefined};pl.dev=true;pl.note=S.roll.note;await DB.put(pl);
   pr.classList.remove('dev');pr.querySelector('.photo').style.filter='';pr.querySelectorAll('.cl').forEach(l=>l.style.opacity='');
   sfx.bell();say(`A ${cr.kind}. It answers to ${cr.name}.`);$('#lift').hidden=false}
 function lift(){if(dk.stage!=='done')return;dk.stage='lifting';const pl=dk.cur.pl;$('#lift').hidden=true;sfx.drip();$('#paper').classList.add('lift');
@@ -754,26 +802,42 @@ function lift(){if(dk.stage!=='done')return;dk.stage='lifting';const pl=dk.cur.p
     else{dk.stage='hung';dk.cur=null;slosh.off();benchEl.innerHTML='';darkEl.classList.add('pullme');say('All hung to dry. Pull the chain once more.')}},1050)}
 
 /* ---------- the drying line and the field map ---------- */
-const BY={clockwork:'Drawn by the camera’s own clockwork.',pollinations:'Painted by Pollinations.ai.',kontext:'Painted by FLUX.1 Kontext via Hugging Face.'};
-async function enterAlbum(){hum.off();slosh.off();known=(await DB.all()).filter(p=>p.dev);const cards=$('#cards');cards.innerHTML='';
-  [...known].reverse().forEach(pl=>{const c=el('button','card'),d=new Date(pl.t);c.setAttribute('aria-label',`${pl.cr.kind} called ${pl.cr.name}. Tap to turn over.`);
-    const fl=el('div','flip'),fr=el('figure','fr'),bk=el('div','bk');fr.style.margin=0;fr.append(printEl(pl));fr.append(el('figcaption','',esc(pl.cr.name)+', a '+esc(pl.cr.kind)));
-    bk.innerHTML=`<h3>${esc(pl.cr.kind)}</h3><p>Answers to <b>${esc(pl.cr.name)}</b>.</p><p class="ln">${esc(pl.cr.line)}</p>
-      <p class="note">“${esc(pl.note||'')}”</p><span class="stamp">plate ${ROMAN[pl.n]||pl.n}</span>
-      <p class="meta">${d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'})} · ${d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}<br>
-      ${pl.lat!=null?pl.lat.toFixed(5)+', '+pl.lon.toFixed(5):'place not recorded'}<br>${BY[pl.cr.by]||''}</p>`;
-    fl.append(fr,bk);c.append(fl);c.addEventListener('click',()=>c.classList.toggle('back'));cards.append(c)});
-  go('album');say('');cards.scrollLeft=0;drawMap()}
+const byLine=b=>!b||b==='clockwork'?'Drawn by the camera\u2019s own clockwork.':/Kontext/i.test(b)?'Painted by FLUX.1 Kontext via Hugging Face.':/klein/i.test(b)?'Painted by FLUX.2 klein via Hugging Face.':'Painted by '+b+'.';
+let albumMode='mine',friend=null,friendData=[];
+function card(o){const c=el('div','card'),d=new Date(o.t);c.tabIndex=0;c.setAttribute('role','button');c.setAttribute('aria-label',`${o.kind} called ${o.name}. Tap to turn over.`);
+  const fl=el('div','flip'),fr=el('figure','fr'),bk=el('div','bk');fr.style.margin=0;fr.append(o.print);fr.append(el('figcaption','',esc(o.name)+', a '+esc(o.kind)));
+  bk.innerHTML=`<h3>${esc(o.kind)}</h3><p>Answers to <b>${esc(o.name)}</b>${o.subject?', born from a '+esc(o.subject):''}.</p><p class="ln">${esc(o.line||'')}</p>
+    ${o.note!=null?`<p class="note">\u201C${esc(o.note)}\u201D</p>`:''}${o.plate?`<span class="stamp">plate ${o.plate}</span>`:''}
+    <p class="meta">${o.who?'Found by '+esc(o.who)+'<br>':''}${d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'})} · ${d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}<br>
+    ${o.lat!=null?Number(o.lat).toFixed(5)+', '+Number(o.lon).toFixed(5):'place not recorded'}<br>${byLine(o.by)}${o.unsynced?'<br>Not shared yet.':''}</p>`;
+  const sv=el('button','brass save','Save image');sv.addEventListener('click',e=>{e.stopPropagation();saveImage(o.src,o.name+' the '+o.kind)});bk.append(sv);
+  fl.append(fr,bk);c.append(fl);const flip=()=>c.classList.toggle('back');c.addEventListener('click',flip);c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}});return c}
+async function enterAlbum(){hum.off();slosh.off();known=(await DB.all()).filter(p=>p.dev&&p.cr);go('album');say('');renderAlbum();syncAll()}
+async function renderAlbum(){const cards=$('#cards'),fr=$('#friends'),sub=$('#albumSub');cards.innerHTML='';
+  $('#tabMine').setAttribute('aria-pressed',albumMode==='mine');$('#tabFriends').setAttribute('aria-pressed',albumMode==='friends');fr.hidden=albumMode!=='friends';
+  if(albumMode==='mine'){sub.textContent=known.length?'Tap a print to read its back.':'Nothing developed yet.';
+    [...known].reverse().forEach(pl=>cards.append(card({kind:pl.cr.kind,name:pl.cr.name,subject:pl.cr.subject,line:pl.cr.line,note:pl.note||'',plate:ROMAN[pl.n]||pl.n,t:pl.t,lat:pl.lat,lon:pl.lon,by:pl.cr.by,
+      unsynced:S.user&&!pl.synced,src:pl.final||pl.blob,print:printEl(pl)})));
+    cards.scrollLeft=0;drawMap(known.map(p=>({lat:p.lat,lon:p.lon,col:p.cr.col,label:p.cr.name+', a '+p.cr.kind})));return}
+  sub.textContent='Loading the other walkers\u2026';
+  try{const r=await api({action:'list',username:friend||undefined},20000);const others=(r.walkers||[]).map(w=>w.username).filter(u=>!S.user||u!==S.user.username);
+    fr.innerHTML='';others.forEach(u=>{const b=el('button','tab');b.textContent=u;b.setAttribute('aria-pressed',u===friend);b.addEventListener('click',()=>{friend=friend===u?null:u;renderAlbum()});fr.append(b)});
+    friendData=(r.creatures||[]).filter(c=>!S.user||c.username!==S.user.username);
+    sub.textContent=!others.length?'No one else has the camera yet. Send them the link.':friendData.length?(friend?friend+'\u2019s creatures.':'Everyone else\u2019s creatures. Tap a name to see one walker.'):'Nothing developed yet.';
+    friendData.forEach(c=>{const pr=el('div','print');pr.style.aspectRatio='1';const im=el('img','photo');im.alt='';im.loading='lazy';im.crossOrigin='anonymous';im.src=c.imageUrl;pr.append(im);
+      const K=KINDS[c.mood]||KINDS.quiet;cards.append(card({kind:c.kind||K.kind,name:c.name||'?',subject:c.subject,line:c.lore,note:null,t:Date.parse(c.taken_at||c.created_at),lat:c.lat,lon:c.lon,by:c.painter,who:c.username,src:c.imageUrl,print:pr}))});
+    drawMap(friendData.map(c=>({lat:c.lat,lon:c.lon,col:(KINDS[c.mood]||KINDS.quiet).col,label:(c.name||'?')+', '+c.username})))}
+  catch(e){sub.textContent='Could not reach the other walkers. Check your connection.'}}
 let map=null;
 function leaflet(){return new Promise((ok,no)=>{if(window.L)return ok();const l=el('link');l.rel='stylesheet';l.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.append(l);
   const s=el('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';s.onload=ok;s.onerror=no;document.head.append(s)})}
-async function drawMap(){const pts=known.filter(p=>p.lat!=null),m=$('#map'),note=$('#mapNote');
-  if(!pts.length){m.hidden=true;note.textContent=known.length?'No place was recorded for these plates, so there is nothing to pin yet.':'';return}
-  try{await leaflet()}catch(e){m.hidden=true;note.textContent='The map could not load. Your creatures are at: '+pts.map(p=>p.lat.toFixed(4)+', '+p.lon.toFixed(4)).join(' · ');return}
+async function drawMap(list){const pts=(list||[]).filter(p=>p.lat!=null),m=$('#map'),note=$('#mapNote');
+  if(!pts.length){m.hidden=true;note.textContent=(list||[]).length?'No place was recorded for these plates, so there is nothing to pin yet.':'';return}
+  try{await leaflet()}catch(e){m.hidden=true;note.textContent='The map could not load. Your creatures are at: '+pts.map(p=>Number(p.lat).toFixed(4)+', '+Number(p.lon).toFixed(4)).join(' · ');return}
   m.hidden=false;note.textContent='Where they live. The compass on the camera points to the nearest one.';
   if(map){map.remove();map=null}map=L.map(m,{attributionControl:true,zoomControl:false});
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
-  const ms=pts.map(p=>L.circleMarker([p.lat,p.lon],{radius:9,color:'#2a1b10',weight:2,fillColor:p.cr.col,fillOpacity:.95}).addTo(map).bindPopup(esc(p.cr.name)+', a '+esc(p.cr.kind)));
+  const ms=pts.map(p=>L.circleMarker([p.lat,p.lon],{radius:9,color:'#2a1b10',weight:2,fillColor:p.col,fillOpacity:.95}).addTo(map).bindPopup(esc(p.label)));
   map.fitBounds(L.featureGroup(ms).getBounds().pad(.4),{maxZoom:17})}
 
 /* ---------- workshop ---------- */
@@ -784,7 +848,11 @@ function senseOut(){const o=$('#senseOut');if(!started)return;
   o.innerHTML=M.have?`Motion permission: ${M.perm}<br>Tilt from upright: ${upright().toFixed(0)}° ${raised()?'(raised)':lowered()?'(lowered)':''}<br>Steadiness: ${M.rot.toFixed(1)} °/s ${still()?'(still)':'(moving)'}<br>Steps this plate: ${S.roll.steps}`
     :`Motion permission: ${esc(M.perm)}<br>No motion data is arriving, so the camera uses buttons. On iPhone: Settings → Apps → Safari → Motion &amp; Orientation Access must be on, then reload and tap Take the camera.`}
 function hardStop(){$('#prepNow').hidden=true;hum.off();slosh.off();fork.off();camStop();mstate='idle';dk.stage='off';dk.cur=null;$('#shop').hidden=true;$('#tstMenu').hidden=true;lastC=-1;lastNotch=0}
-function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);$('#hf').value=S.set.hf;$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
+function whoLine(){const l=$('#whoLine'),b=$('#whoBtn');if(!l)return;l.textContent=S.user?`Signed in as ${S.user.username}. Your creatures are shared with the other walkers.`:'Not signed in. Creatures stay on this phone.';b.textContent=S.user?'Sign out':'Sign in'}
+let whoThen=null;
+function askWho(then){whoThen=then||null;$('#whoErr').hidden=true;$('#whoName').value=S.user?S.user.username:'';$('#whoPin').value='';$('#who').hidden=false;setTimeout(()=>$('#whoName').focus(),50)}
+function closeWho(){$('#who').hidden=true;const t=whoThen;whoThen=null;if(t)t()}
+function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);whoLine();$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
   $('#logOut').hidden=true;$('#erase').textContent='Erase everything';$('#shop').hidden=false}
 function wire(){
   $('#take').addEventListener('click',take);holdable($('#can'),600,loadRoll);holdable($('#pull'),700,()=>{S.roll.ended=true;S.roll.ready=false;save();sfx.click();sfx.fold();setTimeout(()=>sfx.chime(),500);say('Walk ended. The roll is sealed. Develop it when you are home.',8000)});
@@ -795,7 +863,6 @@ function wire(){
   $('#toAlbum').addEventListener('click',enterAlbum);$('#backCam').addEventListener('click',()=>{go('face');say(S.roll.loaded?'':'Hold the canister to load a fresh roll.',7000)});
   $('#toLine').addEventListener('click',()=>{S.roll=fresh();save();lastC=-1;enterAlbum()});
   document.querySelectorAll('[name=eng]').forEach(r=>r.addEventListener('change',()=>{S.set.engine=r.value;save()}));
-  $('#hf').addEventListener('change',e=>{S.set.hf=e.target.value.trim();save()});
   $('#setBench').addEventListener('change',e=>{S.set.bench=e.target.checked;save()});$('#setManual').addEventListener('change',e=>{S.set.manual=e.target.checked;save()});
   $('#pickBtn').addEventListener('click',()=>$('#file').click());
   $('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{pick=im;pickPrev.src=im.src;pickPrev.hidden=false;$('#nolens').hidden=true;say('Press the shutter.')};im.src=URL.createObjectURL(f)});
@@ -809,13 +876,23 @@ function wire(){
   $('#tstRoll').addEventListener('click',()=>{hardStop();S.roll=fresh();save();go(started?'face':'case');say(started?'A clean roll. Hold the canister to load it.':'',6000)});
   let tArm=0;$('#tstAll').addEventListener('click',async e=>{if(Date.now()-tArm>4000){tArm=Date.now();e.target.textContent='Tap again: erases every print';return}
     hardStop();await DB.clear();known=[];S.roll=fresh();S.fix=null;save();go(started?'face':'case');say('Everything erased.',5000)});
+  $('#whoForm').addEventListener('submit',async e=>{e.preventDefault();const u=$('#whoName').value.trim().toLowerCase(),pin=$('#whoPin').value.trim(),er=$('#whoErr'),go_=$('#whoGo');
+    er.hidden=true;go_.disabled=true;go_.textContent='Opening the case\u2026';
+    try{const r=await api({action:'login',username:u,pin},20000);S.user={username:r.username,token:r.token};save();whoLine();sfx.chime();closeWho();
+      say(r.created?`Welcome, ${r.username}.`:`Welcome back, ${r.username}.`,5000);known=(await DB.all()).filter(p=>p.dev&&p.cr);syncAll()}
+    catch(x){er.textContent=x.message==='Failed to fetch'||/abort|timeout/i.test(x.message)?'Could not reach the server. Check your connection.':x.message;er.hidden=false}
+    go_.disabled=false;go_.textContent='Sign in'});
+  $('#whoSkip').addEventListener('click',()=>{S.whoSkipped=true;save();closeWho()});
+  $('#whoBtn').addEventListener('click',()=>{if(S.user){S.user=null;save();whoLine()}else{$('#shop').hidden=true;askWho()}});
+  $('#tabMine').addEventListener('click',()=>{albumMode='mine';renderAlbum()});
+  $('#tabFriends').addEventListener('click',()=>{albumMode='friends';friend=null;renderAlbum()});
   let armed=0;$('#erase').addEventListener('click',async e=>{if(Date.now()-armed>4000){armed=Date.now();e.target.textContent='Tap again to erase all plates';return}
     await DB.clear();known=[];S.roll=fresh();S.fix=null;save();e.target.textContent='Erased';lastC=-1;if(started)go('face')})}
 
 /* ---------- beginning ---------- */
 let started=false;
 async function begin(){started=true;window.addEventListener('deviceorientation',onOri);window.addEventListener('deviceorientationabsolute',onOri);window.addEventListener('devicemotion',onMot);
-  S.fix=null;geoStart();wake();known=(await DB.all()).filter(p=>p.dev)}
+  geoStart();wake();known=(await DB.all()).filter(p=>p.dev)}
 async function take(){A();sfx.click();const ps=[];                 /* iOS only grants motion and camera from a tap, so ask for both here */
   try{if(window.DeviceMotionEvent&&DeviceMotionEvent.requestPermission)ps.push(DeviceMotionEvent.requestPermission());
     if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission)ps.push(DeviceOrientationEvent.requestPermission())}catch(e){}
@@ -823,12 +900,15 @@ async function take(){A();sfx.click();const ps=[];                 /* iOS only g
   const pr=await Promise.allSettled(ps);M.perm=!ps.length?'not needed':pr.every(r=>r.status==='fulfilled'&&r.value==='granted')?'granted':pr.map(r=>r.status==='fulfilled'?r.value:'error').join(' / ');
   await cam;await begin();sfx.creak();
   if(S.roll.pulled)return enterDark();
+  if(!S.user&&!S.whoSkipped)askWho();
   go('face');say(S.roll.ended?'The roll is sealed. Enter the darkroom when you are home.':S.roll.loaded?(S.roll.ready?'Raise it to your eye when something catches you.':'Walk on. Your steps wind the next plate.'):'Hold the canister to load a fresh roll.',9000)}
 let last=now();
 function loop(){const t=now(),dt=Math.min(.1,(t-last)/1000);last=t;
   if(!$('#shop').hidden)senseOut();
   if(room==='face')tickFace(dt);else if(room==='mount')tickMount(dt);else if(room==='dark')tickDark(dt);requestAnimationFrame(loop)}
 DB.open().then(()=>{wire();requestAnimationFrame(loop)});
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 window.__mc={S:()=>S,M,dk,sampleScene,drawCreature,KINDS,moodOf};
 })();
 </script>

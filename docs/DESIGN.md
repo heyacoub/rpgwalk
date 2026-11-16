@@ -175,6 +175,14 @@ Every sound is synthesised in the browser, with no audio files. **Claude.** Chim
 - A faint "tester" button sits bottom-left on every screen: start a new roll or erase everything, from anywhere, including mid-darkroom. **Yacoub** (13 Nov).
 - Workshop → Sensor check shows live motion permission, tilt, steadiness and steps.
 
+## 5c. v0.3 (17 Nov, Yacoub's asks)
+- **Home-screen app (PWA).** Add to Home Screen gives an icon, full screen and offline opening. It does **not** run in the background: iPhone and Android both freeze web apps when locked. When reopened, the walk is credited with the straight-line distance since the last GPS fix, at walking pace or slower. True background tracking needs a native app, which the movement redesign will need anyway.
+- **Accounts:** a name plus a 4-digit PIN, on Supabase (project `rpgwalk`, Frankfurt). The same two on any phone bring your creatures back. The PIN was added to the "username only" ask so a friend can't post as you; it's the smallest lock that does that.
+- **Sharing:** the drying line has Mine and Friends tabs. Friends see each other's prints, names, lore and places, never reflections.
+- **Creatures from the photo.** On the server, a vision model (Qwen2.5-VL, falling back to GLM-4.5V) picks the main object in the photo and reads the mood from the reflection, then invents a creature born from that object (a branch + relaxed = a mossy twig sprite; a branch + frustrated = an ember-bark imp). FLUX.1 Kontext then paints it into the photo. If painting fails, the clockwork creature is used, keeping the vision model's name and lore.
+- **Baked prints.** Every print is now one finished image: the creature is painted or drawn *into* the photo, not layered on top. This fixes the black box seen on iPhone.
+- **Save image** on the back of every print: opens the share sheet on a phone (Save Image), or downloads elsewhere.
+
 ## 6. Saving
 
 - The current roll and settings are saved in the browser's local storage, and plates (photo, location, creature) in the browser's database (IndexedDB). Closing the page mid-walk keeps the roll.
