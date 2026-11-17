@@ -16,7 +16,15 @@ const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: 
 
 const MOODS = ["angry", "sleepy", "calm", "joyful", "sad", "anxious", "curious", "grateful", "quiet"];
 const VISION = ["google/gemma-4-31B-it", "Qwen/Qwen2.5-VL-7B-Instruct", "google/gemma-3-12b-it", "Qwen/Qwen3-VL-4B-Instruct", "Qwen/Qwen3.5-27B"];   // providers come and go: first live one wins
-const PAINTERS = ["black-forest-labs/FLUX.1-Kontext-dev", "black-forest-labs/FLUX.2-klein-9B"];
+const PAINTERS = ["black-forest-labs/FLUX.1-Kontext-dev", "black-forest-labs/FLUX.2-dev"];
+// Art styles, written as plain descriptions of how the reference games look (no names, no copied art).
+// One is picked at random per creature, so the camera has range.
+const STYLES: Record<string, string> = {
+  storybook: "a hand-drawn storybook illustration with warm, loose ink linework, soft watercolour washes and a muted, earthy palette, slightly whimsical proportions",   // Professor Layton
+  village: "a soft, rounded, toy-like look with simple chunky shapes, matte pastel colours and gentle ambient light",                                                   // Animal Crossing
+  forest: "a painterly hand-drawn animation look with soft gouache colours, gentle natural light and a calm, quiet mood",                                              // Ghibli forest spirits
+  pocket: "a clean cel-shaded creature design with a bold, simple silhouette, flat bright colours and a thin dark outline",                                           // collectible creature games
+};
 
 async function sha(s: string) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
@@ -36,9 +44,9 @@ async function readPhoto(photoB64: string, reflection: string) {
 Their reflection: """${(reflection || "").slice(0, 500)}"""
 Look at the photo. Pick the single most interesting real object or surface in it (a branch, a doorway, a wall, a lamp, a puddle...).
 Decide the walker's mood from the reflection, choosing exactly one of: ${MOODS.join(", ")}. If nothing fits, use quiet.
-Invent ONE small creature that is born from that object and carries that mood: e.g. a branch + relaxed = a calm mossy twig sprite; a branch + frustrated = a smouldering ember-bark imp.
+Invent ONE creature that is born from that object and carries that mood, e.g. a branch + relaxed = a calm mossy twig creature; a branch + frustrated = a smouldering ember-bark creature. Surprise me: it can be any kind of creature, as long as it is a living, animal-like being, never a person, a plant or a ghost.
 Reply with JSON only, no prose:
-{"subject":"the object, 1-3 words","material":"what the creature is made of, 2-5 words","where":"left|center|right","height":"top|middle|bottom","mood":"one mood","kind":"a 1-2 word species name, Title Case","name":"a short invented given name","lore":"one sentence of lore, under 20 words, present tense","look":"what it looks like, under 25 words"}`;
+{"subject":"the object, 1-3 words","material":"what the creature is made of, 2-5 words","where":"left|center|right","height":"top|middle|bottom","mood":"one mood","kind":"a 1-2 word species name, Title Case","name":"a short invented given name","lore":"one sentence of lore, under 20 words, present tense","look":"what the creature looks like, under 20 words"}`;
   let lastErr = "";
   for (const model of VISION) {
     try {
@@ -61,15 +69,16 @@ Reply with JSON only, no prose:
   throw new Error("vision unavailable: " + lastErr);
 }
 
-async function paint(photoB64: string, c: Record<string, string>) {
+async function paint(photoB64: string, c: Record<string, string>, wantStyle?: string, wantPainter?: string) {
   const hf = new InferenceClient(HF);
   const spot = `${c.where === "center" ? "centre" : c.where} ${c.height === "middle" ? "middle" : c.height === "top" ? "upper part" : "lower part"}`;
-  const prompt = `Bring part of the ${c.subject} in this photo to life as one small ${c.mood} creature made of ${c.material}: ${c.look}. It sits half hidden at the ${spot} of the scene, as if it has always lived there, lit by the same light as the photo, softly glowing, painted in a gentle storybook style. Exactly one creature. Keep everything else in the photo unchanged.`;
+  const styleKey = wantStyle && STYLES[wantStyle] ? wantStyle : Object.keys(STYLES)[Math.floor(Math.random() * Object.keys(STYLES).length)];
+  const prompt = `Add one ${c.mood} creature to this photo: ${c.look}. It is born from the ${c.subject} and made partly of ${c.material}. It is a living, animal-like creature, solid and fully visible, at the ${spot} of the scene, on or beside the ${c.subject}, lit like the photo, with a soft shadow where it touches. Draw the creature as ${STYLES[styleKey]}. Exactly one creature. Keep everything else in the photo unchanged.`;
   let lastErr = "";
-  for (const model of PAINTERS) {
+  for (const model of (wantPainter ? [wantPainter] : PAINTERS)) {
     try {
       const blob = await hf.imageToImage({ model, inputs: new Blob([b64ToBytes(photoB64)], { type: "image/jpeg" }), parameters: { prompt } });
-      return { bytes: new Uint8Array(await blob.arrayBuffer()), type: blob.type || "image/jpeg", painter: model };
+      return { bytes: new Uint8Array(await blob.arrayBuffer()), type: blob.type || "image/jpeg", painter: model, style: styleKey };
     } catch (e) { lastErr = `${model}: ${(e as Error).message}`; console.warn("paint failed", lastErr); }
   }
   throw new Error("painter unavailable: " + lastErr);
@@ -122,8 +131,8 @@ Deno.serve(async (req) => {
       if (!HF) return json({ error: "The server has no Hugging Face token yet." }, 503);
       const meta: Record<string, any> = await readPhoto(b.photo, b.reflection);
       try {
-        const p = await paint(b.photo, meta);
-        meta.painter = p.painter;
+        const p = await paint(b.photo, meta, b.style, b.painter);   // style/painter overrides are for side-by-side tests
+        meta.painter = p.painter + " · " + p.style;
         return json(await store(username, b, p.bytes, p.type, meta));
       } catch (e) {
         return json({ creature: meta, needsBake: true, why: (e as Error).message });

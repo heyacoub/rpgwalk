@@ -802,7 +802,7 @@ function lift(){if(dk.stage!=='done')return;dk.stage='lifting';const pl=dk.cur.p
     else{dk.stage='hung';dk.cur=null;slosh.off();benchEl.innerHTML='';darkEl.classList.add('pullme');say('All hung to dry. Pull the chain once more.')}},1050)}
 
 /* ---------- the drying line and the field map ---------- */
-const byLine=b=>!b||b==='clockwork'?'Drawn by the camera\u2019s own clockwork.':/Kontext/i.test(b)?'Painted by FLUX.1 Kontext via Hugging Face.':/klein/i.test(b)?'Painted by FLUX.2 klein via Hugging Face.':'Painted by '+b+'.';
+const byLine=b=>!b||b==='clockwork'?'Drawn by the camera\u2019s own clockwork.':/Kontext/i.test(b)?'Painted by FLUX.1 Kontext via Hugging Face.':/FLUX\.2/i.test(b)?'Painted by FLUX.2 via Hugging Face.':'Painted by '+b+'.';
 let albumMode='mine',friend=null,friendData=[];
 function card(o){const c=el('div','card'),d=new Date(o.t);c.tabIndex=0;c.setAttribute('role','button');c.setAttribute('aria-label',`${o.kind} called ${o.name}. Tap to turn over.`);
   const fl=el('div','flip'),fr=el('figure','fr'),bk=el('div','bk');fr.style.margin=0;fr.append(o.print);fr.append(el('figcaption','',esc(o.name)+', a '+esc(o.kind)));
