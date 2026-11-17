@@ -7,7 +7,7 @@
 // list    {username?}                              -> {walkers, creatures}
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { InferenceClient } from "npm:@huggingface/inference@4.0.5";
+import { InferenceClient } from "npm:@huggingface/inference@4.13.32";
 
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 const HF = Deno.env.get("HF_TOKEN") || "";
@@ -15,7 +15,7 @@ const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
 
 const MOODS = ["angry", "sleepy", "calm", "joyful", "sad", "anxious", "curious", "grateful", "quiet"];
-const VISION = ["Qwen/Qwen2.5-VL-7B-Instruct", "Qwen/Qwen2.5-VL-32B-Instruct", "zai-org/GLM-4.5V", "Qwen/Qwen2.5-VL-3B-Instruct"];
+const VISION = ["google/gemma-4-31B-it", "Qwen/Qwen2.5-VL-7B-Instruct", "google/gemma-3-12b-it", "Qwen/Qwen3-VL-4B-Instruct", "Qwen/Qwen3.5-27B"];   // providers come and go: first live one wins
 const PAINTERS = ["black-forest-labs/FLUX.1-Kontext-dev", "black-forest-labs/FLUX.2-klein-9B"];
 
 async function sha(s: string) {
@@ -32,7 +32,6 @@ async function walkerFromToken(token: string) {
 }
 
 async function readPhoto(photoB64: string, reflection: string) {
-  const hf = new InferenceClient(HF);
   const ask = `You are the spirit inside a magical clockwork camera. A walker photographed a place where a creature might hide, then wrote how their walk felt.
 Their reflection: """${(reflection || "").slice(0, 500)}"""
 Look at the photo. Pick the single most interesting real object or surface in it (a branch, a doorway, a wall, a lamp, a puddle...).
@@ -43,11 +42,14 @@ Reply with JSON only, no prose:
   let lastErr = "";
   for (const model of VISION) {
     try {
-      const r = await hf.chatCompletion({
-        model, max_tokens: 350, temperature: 0.8,
-        messages: [{ role: "user", content: [{ type: "text", text: ask }, { type: "image_url", image_url: { url: "data:image/jpeg;base64," + photoB64.replace(/^data:[^,]+,/, "") } }] }],
+      const res = await fetch("https://router.huggingface.co/v1/chat/completions", {
+        method: "POST", headers: { Authorization: `Bearer ${HF}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model, max_tokens: 1200, temperature: 0.8,
+          messages: [{ role: "user", content: [{ type: "text", text: ask }, { type: "image_url", image_url: { url: "data:image/jpeg;base64," + photoB64.replace(/^data:[^,]+,/, "") } }] }] }),
       });
-      const txt = r.choices?.[0]?.message?.content || "";
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+      const r = await res.json();
+      const txt = String(r.choices?.[0]?.message?.content || "").replace(/<think>[\s\S]*?<\/think>/g, "");
       const m = String(txt).match(/\{[\s\S]*\}/);
       if (!m) throw new Error("no json: " + String(txt).slice(0, 120));
       const o = JSON.parse(m[0]);
