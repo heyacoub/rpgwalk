@@ -138,6 +138,21 @@ Deno.serve(async (req) => {
         return json({ creature: meta, needsBake: true, why: (e as Error).message });
       }
     }
+    if (b.action === "bakeoff") {   // test bench: one photo, every painter x every style, side by side
+      if (!HF) return json({ error: "The server has no Hugging Face token yet." }, 503);
+      const meta: Record<string, any> = await readPhoto(b.photo, b.reflection);
+      const stamp = Date.now(), jobs: Promise<Record<string, unknown>>[] = [];
+      for (const painter of PAINTERS) for (const style of Object.keys(STYLES)) jobs.push((async () => {
+        try {
+          const p = await paint(b.photo, meta, style, painter);
+          const path = `bakeoff/${username}/${stamp}-${painter.split("/")[1]}-${style}.jpg`;
+          const up = await db.storage.from("prints").upload(path, p.bytes, { contentType: p.type, upsert: true });
+          if (up.error) throw up.error;
+          return { painter, style, url: publicUrl(path) };
+        } catch (e) { return { painter, style, error: (e as Error).message.slice(0, 160) }; }
+      })());
+      return json({ creature: meta, results: await Promise.all(jobs) });
+    }
     if (b.action === "save") {
       return json(await store(username, b, b64ToBytes(b.image), "image/jpeg", b.meta || {}));
     }
