@@ -514,10 +514,10 @@ body[data-room=dark] #cap{color:#ffb9a6}
     <label><input type="radio" name="eng" value="auto"><span><b>The darkroom spirit.</b> Your photo and reflection go to the server, where a vision model reads the photo and an image model paints a creature into it. Needs you to be signed in. Falls back to clockwork.</span></label>
     <label><input type="radio" name="eng" value="clock"><span><b>Clockwork only.</b> Drawn on this phone from your reflection. Nothing leaves it until you sign in to share.</span></label>
     <h3>Art style</h3>
-    <label><input type="radio" name="art" value="storybook"><span><b>Storybook.</b> Ink lines and watercolour washes.</span></label>
-    <label><input type="radio" name="art" value="village"><span><b>Toy diorama.</b> Soft, rounded, pastel.</span></label>
     <label><input type="radio" name="art" value="forest"><span><b>Painted forest.</b> Gouache, calm and soft.</span></label>
-    <label><input type="radio" name="art" value="pocket"><span><b>Pocket game.</b> Cel-shaded, bold outlines.</span></label>
+    <label><input type="radio" name="art" value="amber"><span><b>Amber.</b> Golden-hour light, rich brushwork, deep warm shadows.</span></label>
+    <label><input type="radio" name="art" value="moon"><span><b>Moonlit.</b> Blue-green night, mist, small warm lanterns.</span></label>
+    <label><input type="radio" name="art" value="sketch"><span><b>Sketchbook.</b> Light gouache on paper, pencil showing through.</span></label>
     <h3>Bench testing</h3>
     <label><input type="checkbox" id="setBench"><span>Fast mode: 8-second mount, 20-second wind, home counts after 30 m.</span></label>
     <label><input type="checkbox" id="setManual"><span>Buttons instead of gestures.</span></label>
@@ -1019,7 +1019,7 @@ const ELEMENTS=['Water','Stone','Leaf','Ember','Sky','City'],ELCOL={Water:'#3b7f
 const waiting=p=>!p.dev&&(p.roll!==S.roll.id||S.roll.ended||!S.walk);
 const ARTB='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/',ART_N={room:'study-room',map:'map',door:'door',wdark:'window-dark',wlit:'window-lit',cam:'camera',book:'journal',compass:'compass'};
 function setArt(k){S.set.art=k;const pre=k&&k!=='storybook'?k+'-':'';for(const v in ART_N)document.documentElement.style.setProperty('--a-'+v,`url(${ARTB}${pre}${ART_N[v]}.jpg)`);save()}
-setArt(S.set.art||'storybook');
+if(!['forest','amber','moon','sketch'].includes(S.set.art))S.set.art='forest';setArt(S.set.art);
 const FOG=new Set(S.fog);const parch=new Image();parch.crossOrigin='anonymous';parch.src='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/parchment.jpg';parch.onload=()=>{if(room==='out'&&panel===0)drawFog()};const CELL=.00008;   /* about 9 m */
 let panel=1,mmap=null,follow=true,nearby=[];
 const fmtT=ms=>{const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60;return h?h+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'):m+':'+String(sec).padStart(2,'0')};
@@ -1163,7 +1163,7 @@ function whoLine(){const l=$('#whoLine'),b=$('#whoBtn');if(!l)return;l.textConte
 let whoThen=null;
 function askWho(then){whoThen=then||null;$('#whoErr').hidden=true;$('#whoName').value=S.user?S.user.username:'';$('#whoPin').value='';$('#who').hidden=false;setTimeout(()=>$('#whoName').focus(),50)}
 function closeWho(){$('#who').hidden=true;const t=whoThen;whoThen=null;if(t)t()}
-function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);document.querySelectorAll('[name=art]').forEach(r=>r.checked=r.value===(S.set.art||'storybook'));whoLine();$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
+function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);document.querySelectorAll('[name=art]').forEach(r=>r.checked=r.value===S.set.art);whoLine();$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
   $('#logOut').hidden=true;$('#erase').textContent='Erase everything';$('#shop').hidden=false}
 function wire(){
   wireWalk();
