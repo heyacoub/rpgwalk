@@ -368,17 +368,11 @@ body[data-room=dark] #cap{color:#ffb9a6}
 @media (prefers-reduced-motion:reduce){.hung,.cl.body,.breath,#needle.full,.dark.pullme .chain b{animation:none}}
 </style>
 </head>
-<body data-room="case">
+<body data-room="study">
 
-<section class="room leather on" id="case">
-  <div class="lens" aria-hidden="true"></div>
-  <h1>The Magical Camera</h1>
-  <p>It runs on walking, and it only sees what you slow down for.</p>
-  <button class="brass" id="take">Take the camera</button>
-  <small>SOUND ON · HOLD IT UPRIGHT</small>
-</section>
 
-<section class="room leather" id="study">
+
+<section class="room leather on" id="study">
   <div class="studyw">
     <button class="wallmap" id="wallMap" aria-label="The map on the wall: everything you have uncovered"><span>the world you've uncovered</span></button>
     <div class="window" aria-hidden="true"><div class="lamp" id="lamp"></div></div>
@@ -622,7 +616,7 @@ const slosh=voice(a=>{const g=a.createGain();g.gain.value=0;const s=a.createBuff
   s.connect(f).connect(g).connect(master);s.start();return{g,f,stop(){s.stop()}}});
 
 /* ---------- rooms and the caption ---------- */
-let room='case';
+let room='study';
 const rooms=[...document.querySelectorAll('.room')];
 function go(name){room=name;document.body.dataset.room=name;rooms.forEach(r=>r.classList.toggle('on',r.id===name))}
 const cap=$('#cap');let capT=0;
@@ -1105,7 +1099,7 @@ function showPage(p,isNew){const sh=$('#sum');sh.innerHTML='';const{c,bt}=pageCa
 function enterJournal(){const l=$('#jList');l.innerHTML='';if(!S.pages.length)l.innerHTML='<p style="text-align:center;font-style:italic">No walks yet. Pages appear here after each one.</p>';
   S.pages.forEach(p=>{const b=el('button','jrow');b.innerHTML=`<span><b>Walk ${p.n}</b> · ${esc(p.intent||'—')}</span><span>${fmtD(p.dist)}${p.finds.length?' · '+p.finds.length+' found':''}</span>`;b.addEventListener('click',()=>showPage(p,false));l.append(b)});go('journal')}
 function wireWalk(){
-  $('#deskCam').addEventListener('click',enterRitual);$('#deskBook').addEventListener('click',enterJournal);$('#jBack').addEventListener('click',enterStudy);
+  $('#deskCam').addEventListener('click',()=>{askMotion();enterRitual()});$('#deskBook').addEventListener('click',enterJournal);$('#jBack').addEventListener('click',enterStudy);
   $('#darkDoor').addEventListener('click',()=>{sfx.click();enterDark()});
   $('#wallMap').addEventListener('click',()=>{go('out');setPanel(0)});$('#mmBack').addEventListener('click',enterStudy);
   $('#rCancel').addEventListener('click',()=>{S.roll=fresh();save();enterStudy()});
@@ -1137,7 +1131,7 @@ function closeWho(){$('#who').hidden=true;const t=whoThen;whoThen=null;if(t)t()}
 function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);whoLine();$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
   $('#logOut').hidden=true;$('#erase').textContent='Erase everything';$('#shop').hidden=false}
 function wire(){
-  $('#take').addEventListener('click',take);wireWalk();
+  wireWalk();
   $('#raise').addEventListener('click',tryRaise);$('#lower').addEventListener('click',()=>fold(mstate==='mounting'?'Put away. No plate spent.':'Put away. The plate is still wound.'));
   $('#prepNow').addEventListener('click',prepared);
   $('#cog').addEventListener('click',openShop);$('#shut').addEventListener('click',()=>{$('#shop').hidden=true});
@@ -1154,9 +1148,9 @@ function wire(){
     try{await navigator.clipboard.writeText(t);$('#copyLog').textContent='Copied'}catch(e){o.select()}setTimeout(()=>{$('#copyLog').textContent='Copy walk log'},2000)});
   $('#tst').addEventListener('click',()=>{const m=$('#tstMenu');m.hidden=!m.hidden;$('#tstAll').textContent='Erase everything'});
   $('#tstClose').addEventListener('click',()=>{$('#tstMenu').hidden=true});
-  $('#tstRoll').addEventListener('click',()=>{hardStop();S.walk=null;S.roll=fresh();save();if(started)enterStudy();else go('case');say(started?'Walk cancelled. Back in the Study.':'',6000)});
+  $('#tstRoll').addEventListener('click',()=>{hardStop();S.walk=null;S.roll=fresh();save();enterStudy();say(started?'Walk cancelled. Back in the Study.':'',6000)});
   let tArm=0;$('#tstAll').addEventListener('click',async e=>{if(Date.now()-tArm>4000){tArm=Date.now();e.target.textContent='Tap again: erases every print';return}
-    hardStop();await DB.clear();known=[];S.roll=fresh();S.fix=null;S.walk=null;S.pages=[];S.fog=[];FOG.clear();S.darkNote='';save();if(started)enterStudy();else go('case');say('Everything erased.',5000)});
+    hardStop();await DB.clear();known=[];S.roll=fresh();S.fix=null;S.walk=null;S.pages=[];S.fog=[];FOG.clear();S.darkNote='';save();enterStudy();say('Everything erased.',5000)});
   $('#whoForm').addEventListener('submit',async e=>{e.preventDefault();const u=$('#whoName').value.trim().toLowerCase(),pin=$('#whoPin').value.trim(),er=$('#whoErr'),go_=$('#whoGo');
     er.hidden=true;go_.disabled=true;go_.textContent='Opening the case\u2026';
     try{const r=await api({action:'login',username:u,pin},20000);S.user={username:r.username,token:r.token};save();whoLine();sfx.chime();closeWho();
@@ -1174,6 +1168,11 @@ function wire(){
 let started=false;
 async function begin(){started=true;window.addEventListener('deviceorientation',onOri);window.addEventListener('deviceorientationabsolute',onOri);window.addEventListener('devicemotion',onMot);
   geoStart();wake();known=(await DB.all()).filter(p=>p.dev)}
+let motionAsked=false;
+function askMotion(){if(motionAsked)return;motionAsked=true;const ps=[];   /* iOS only grants motion from a tap, so ask on the first one */
+  try{if(window.DeviceMotionEvent&&DeviceMotionEvent.requestPermission)ps.push(DeviceMotionEvent.requestPermission());
+    if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission)ps.push(DeviceOrientationEvent.requestPermission())}catch(e){}
+  Promise.allSettled(ps).then(pr=>{M.perm=!ps.length?'not needed':pr.every(r=>r.status==='fulfilled'&&r.value==='granted')?'granted':pr.map(r=>r.status==='fulfilled'?r.value:'error').join(' / ')})}
 async function take(){A();sfx.click();const ps=[];                 /* iOS only grants motion and camera from a tap, so ask for both here */
   try{if(window.DeviceMotionEvent&&DeviceMotionEvent.requestPermission)ps.push(DeviceMotionEvent.requestPermission());
     if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission)ps.push(DeviceOrientationEvent.requestPermission())}catch(e){}
@@ -1187,7 +1186,8 @@ let last=now();
 function loop(){const t=now(),dt=Math.min(.1,(t-last)/1000);last=t;
   if(!$('#shop').hidden)senseOut();
   if(room==='out'){if(S.walk)tickFace(dt);tickCompass(dt)}else if(room==='mount')tickMount(dt);else if(room==='dark')tickDark(dt);requestAnimationFrame(loop)}
-DB.open().then(()=>{wire();requestAnimationFrame(loop)});
+DB.open().then(async()=>{wire();requestAnimationFrame(loop);await begin();
+  if(!S.user&&!S.whoSkipped)askWho();if(S.walk){go('out');setPanel(1);loadNearby()}else enterStudy()});
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 window.__mc={S:()=>S,M,dk,sampleScene,drawCreature,KINDS,moodOf,onWalkFix,setPanel,claimWild,endWalk};
