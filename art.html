@@ -1,6 +1,11 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
-<title>Camera Art</title><style>body{margin:0;background:#140d08;color:#ead9b0;font:16px Georgia,serif;padding:16px}h1{font-weight:400;color:#f3dc93}
-.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:14px}figure{margin:0;background:#2a1d12;padding:8px;border-radius:6px}img{width:100%;display:block;border-radius:4px}figcaption{font:13px monospace;padding-top:6px}</style></head>
-<body><h1>Camera art, first pass</h1><p>Generated with FLUX.1 [dev] through Hugging Face. Tell Claude which to keep, redo or restyle.</p><div class="g" id="g"></div>
-<script>const B='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/';
-['study-room','camera','journal','door','window-dark','window-lit','map','compass','parchment'].forEach(n=>{const f=document.createElement('figure');f.innerHTML=`<img src="${B+n}.jpg?v=1" alt="${n}"><figcaption>${n}</figcaption>`;document.getElementById('g').append(f)})</script></body></html>
+<title>Camera Art</title><style>body{margin:0;background:#140d08;color:#ead9b0;font:16px Georgia,serif;padding:16px}h1{font-weight:400;color:#f3dc93;margin:0 0 6px}h2{font-weight:400;color:#f3dc93;margin:22px 0 8px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.tabs button{font:15px Georgia,serif;min-height:40px;padding:6px 14px;border-radius:20px;border:1px solid #6f5119;background:none;color:#ead9b0}.tabs button[aria-pressed=true]{background:#c9a24a;color:#2a1b10}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:14px}figure{margin:0;background:#2a1d12;padding:8px;border-radius:6px}img{width:100%;display:block;border-radius:4px}figcaption{font:13px monospace;padding-top:6px}</style></head>
+<body><h1>Camera art</h1><p>Four styles, the same eight pieces in each. Generated with FLUX.1 [dev] through Hugging Face. Pick a style here, then switch the app to it in the workshop (Art style).</p>
+<div class="tabs" id="t"></div><div class="g" id="g"></div>
+<script>const B='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/',S={storybook:'Storybook',village:'Toy diorama',forest:'Painted forest',pocket:'Pocket game'},
+N=['study-room','camera','journal','door','window-dark','window-lit','map','compass'];let cur='storybook';
+function draw(){document.getElementById('t').innerHTML='';Object.entries(S).forEach(([k,v])=>{const b=document.createElement('button');b.textContent=v;b.setAttribute('aria-pressed',k===cur);b.onclick=()=>{cur=k;draw()};document.getElementById('t').append(b)});
+  const g=document.getElementById('g');g.innerHTML='';const pre=cur==='storybook'?'':cur+'-';N.forEach(n=>{const f=document.createElement('figure');f.innerHTML=`<img src="${B+pre+n}.jpg?v=2" alt="${S[cur]} ${n}" loading="lazy"><figcaption>${n}</figcaption>`;g.append(f)})}
+draw()</script></body></html>

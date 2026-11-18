@@ -367,25 +367,25 @@ body[data-room=dark] #cap{color:#ffb9a6}
 .small{min-height:40px;padding:6px 14px;font-size:15px}
 
 /* ---- painted art (FLUX.1 [dev] via Hugging Face), feathered into the room ---- */
-:root{--art:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/study-room.jpg)}
-#study.leather{background:linear-gradient(rgba(12,7,4,.35),rgba(12,7,4,.55)),var(--art) center/cover,#1a0f09}
+
+#study.leather{background:linear-gradient(rgba(12,7,4,.35),rgba(12,7,4,.55)),var(--a-room) center/cover,#1a0f09}
 #study.leather::before{display:none}
 .feather{-webkit-mask-image:radial-gradient(closest-side,#000 70%,transparent 100%);mask-image:radial-gradient(closest-side,#000 70%,transparent 100%)}
-.wallmap{background:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/map.jpg) center/cover;border-color:#2b1a0e}
+.wallmap{background:var(--a-map) center/cover;border-color:#2b1a0e}
 .wallmap::before{display:none}
 .wallmap span{position:absolute;left:8px;bottom:8px;font-size:14px;background:rgba(234,217,176,.9)}
-.door{background:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/door.jpg) center/cover;box-shadow:0 10px 24px rgba(0,0,0,.6)}
+.door{background:var(--a-door) center/cover;box-shadow:0 10px 24px rgba(0,0,0,.6)}
 .door::after{display:none}
 .door .sign{margin-top:auto}.door .sign2{margin-bottom:14px;background:rgba(10,6,3,.75);border-radius:4px;padding:2px 8px}
-.window{border:0;background:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/window-dark.jpg) center/cover;box-shadow:0 10px 24px rgba(0,0,0,.6)}
-.window.lit{background-image:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/window-lit.jpg)}
+.window{border:0;background:var(--a-wdark) center/cover;box-shadow:0 10px 24px rgba(0,0,0,.6)}
+.window.lit{background-image:var(--a-wlit)}
 .window::before,.window::after,.window .lamp{display:none}
 .desk{background:linear-gradient(rgba(58,36,20,.55),rgba(30,18,10,.85));box-shadow:inset 0 2px 0 rgba(255,220,160,.15),0 10px 20px rgba(0,0,0,.5)}
-.deskcam,.book{background:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/camera.jpg) center 40%/cover;border:0;min-height:120px;justify-content:flex-end;padding-bottom:8px;box-shadow:0 8px 16px rgba(0,0,0,.55);border-radius:12px}
-.book{background-image:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/journal.jpg)}
+.deskcam,.book{background:var(--a-cam) center 40%/cover;border:0;min-height:120px;justify-content:flex-end;padding-bottom:8px;box-shadow:0 8px 16px rgba(0,0,0,.55);border-radius:12px}
+.book{background-image:var(--a-book)}
 .deskcam .lensd{display:none}
 .deskcam span,.book span,.book small{background:rgba(10,6,3,.72);color:var(--brass-hi);padding:1px 8px;border-radius:4px}
-.bigrose{background:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/compass.jpg) center/118% no-repeat,radial-gradient(#f6ecd0,#d9c79a)}
+.bigrose{background:var(--a-compass) center/118% no-repeat,radial-gradient(#f6ecd0,#d9c79a)}
 .bigrose .cn{display:none}
 @media (prefers-reduced-motion:reduce){.goo i,.panel,.hatch2{animation:none;transition:none}}
 @media (prefers-reduced-motion:reduce){.hung,.cl.body,.breath,#needle.full,.dark.pullme .chain b{animation:none}}
@@ -513,6 +513,11 @@ body[data-room=dark] #cap{color:#ffb9a6}
     <h3>Who paints the creature</h3>
     <label><input type="radio" name="eng" value="auto"><span><b>The darkroom spirit.</b> Your photo and reflection go to the server, where a vision model reads the photo and an image model paints a creature into it. Needs you to be signed in. Falls back to clockwork.</span></label>
     <label><input type="radio" name="eng" value="clock"><span><b>Clockwork only.</b> Drawn on this phone from your reflection. Nothing leaves it until you sign in to share.</span></label>
+    <h3>Art style</h3>
+    <label><input type="radio" name="art" value="storybook"><span><b>Storybook.</b> Ink lines and watercolour washes.</span></label>
+    <label><input type="radio" name="art" value="village"><span><b>Toy diorama.</b> Soft, rounded, pastel.</span></label>
+    <label><input type="radio" name="art" value="forest"><span><b>Painted forest.</b> Gouache, calm and soft.</span></label>
+    <label><input type="radio" name="art" value="pocket"><span><b>Pocket game.</b> Cel-shaded, bold outlines.</span></label>
     <h3>Bench testing</h3>
     <label><input type="checkbox" id="setBench"><span>Fast mode: 8-second mount, 20-second wind, home counts after 30 m.</span></label>
     <label><input type="checkbox" id="setManual"><span>Buttons instead of gestures.</span></label>
@@ -1012,6 +1017,9 @@ async function drawMap(list){const pts=(list||[]).filter(p=>p.lat!=null),m=$('#m
 const INTENTS=[['Patience','#cfe1ec'],['Grace','#ecd9ef'],['Ease','#d8ead0'],['Healing','#f3d6c8'],['Newness','#f4e7b4'],['Compassion','#e9dfd0']];  /* words from DoYouYoga's intention guide */
 const ELEMENTS=['Water','Stone','Leaf','Ember','Sky','City'],ELCOL={Water:'#3b7fb8',Stone:'#7d7468',Leaf:'#4f8a3a',Ember:'#c8502a',Sky:'#7aa7d8',City:'#8a6a22'};
 const waiting=p=>!p.dev&&(p.roll!==S.roll.id||S.roll.ended||!S.walk);
+const ARTB='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/',ART_N={room:'study-room',map:'map',door:'door',wdark:'window-dark',wlit:'window-lit',cam:'camera',book:'journal',compass:'compass'};
+function setArt(k){S.set.art=k;const pre=k&&k!=='storybook'?k+'-':'';for(const v in ART_N)document.documentElement.style.setProperty('--a-'+v,`url(${ARTB}${pre}${ART_N[v]}.jpg)`);save()}
+setArt(S.set.art||'storybook');
 const FOG=new Set(S.fog);const parch=new Image();parch.crossOrigin='anonymous';parch.src='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/parchment.jpg';parch.onload=()=>{if(room==='out'&&panel===0)drawFog()};const CELL=.00008;   /* about 9 m */
 let panel=1,mmap=null,follow=true,nearby=[];
 const fmtT=ms=>{const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60;return h?h+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'):m+':'+String(sec).padStart(2,'0')};
@@ -1155,7 +1163,7 @@ function whoLine(){const l=$('#whoLine'),b=$('#whoBtn');if(!l)return;l.textConte
 let whoThen=null;
 function askWho(then){whoThen=then||null;$('#whoErr').hidden=true;$('#whoName').value=S.user?S.user.username:'';$('#whoPin').value='';$('#who').hidden=false;setTimeout(()=>$('#whoName').focus(),50)}
 function closeWho(){$('#who').hidden=true;const t=whoThen;whoThen=null;if(t)t()}
-function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);whoLine();$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
+function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);document.querySelectorAll('[name=art]').forEach(r=>r.checked=r.value===(S.set.art||'storybook'));whoLine();$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
   $('#logOut').hidden=true;$('#erase').textContent='Erase everything';$('#shop').hidden=false}
 function wire(){
   wireWalk();
@@ -1165,6 +1173,7 @@ function wire(){
   $('#toAlbum').addEventListener('click',enterAlbum);$('#backCam').addEventListener('click',enterStudy);
   $('#toLine').addEventListener('click',()=>{S.darkNote='';save();lastC=-1;enterAlbum()});
   document.querySelectorAll('[name=eng]').forEach(r=>r.addEventListener('change',()=>{S.set.engine=r.value;save()}));
+  document.querySelectorAll('[name=art]').forEach(r=>r.addEventListener('change',()=>setArt(r.value)));
   $('#setBench').addEventListener('change',e=>{S.set.bench=e.target.checked;save()});$('#setManual').addEventListener('change',e=>{S.set.manual=e.target.checked;save()});
   $('#pickBtn').addEventListener('click',()=>$('#file').click());
   $('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{pick=im;pickPrev.src=im.src;pickPrev.hidden=false;$('#nolens').hidden=true;say('Press the shutter.')};im.src=URL.createObjectURL(f)});
