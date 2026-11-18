@@ -41,14 +41,18 @@ async function walkerFromToken(token: string) {
   return data?.username ?? null;
 }
 
-async function readPhoto(photoB64: string, reflection: string) {
+const ELEMENTS = ["Water", "Stone", "Leaf", "Ember", "Sky", "City"];
+const RARITY: Record<string, string> = { common: "", uncommon: " It has one unusual, memorable detail.", rare: " It has striking, unusual colouring and one remarkable feature.", legendary: " It is majestic and otherworldly, with a unique, remarkable feature that makes it unforgettable." };
+
+async function readPhoto(photoB64: string, reflection: string, element?: string) {
   const ask = `You are the spirit inside a magical clockwork camera. A walker photographed a place where a creature might hide, then wrote how their walk felt.
 Their reflection: """${(reflection || "").slice(0, 500)}"""
 Look at the photo. Pick the single most interesting real object or surface in it (a branch, a doorway, a wall, a lamp, a puddle...).
 Decide the walker's mood from the reflection, choosing exactly one of: ${MOODS.join(", ")}. If nothing fits, use quiet.
+${element && ELEMENTS.includes(element) ? `This creature's element is ${element}.` : `Choose the creature's element from what the photo and place suggest, exactly one of: ${ELEMENTS.join(", ")}.`} The element only inspires it, loosely; never make it literal (an Ember creature is not a candle or a flame).
 Invent ONE creature that is born from that object and carries that mood, e.g. a branch + relaxed = a calm mossy twig creature; a branch + frustrated = a smouldering ember-bark creature. Surprise me: it can be any kind of creature, as long as it is a living, animal-like being, never a person, a plant or a ghost.
 Reply with JSON only, no prose:
-{"subject":"the object, 1-3 words","material":"what the creature is made of, 2-5 words","where":"left|center|right","height":"top|middle|bottom","mood":"one mood","kind":"a 1-2 word species name, Title Case","name":"a short invented given name","lore":"one sentence of lore, under 20 words, present tense","look":"what the creature looks like, under 20 words"}`;
+{"subject":"the object, 1-3 words","material":"what the creature is made of, 2-5 words","where":"left|center|right","height":"top|middle|bottom","mood":"one mood","kind":"a 1-2 word species name, Title Case","name":"a short invented given name","lore":"one sentence of lore, under 20 words, present tense","look":"what the creature looks like, under 20 words","element":"one element"}`;
   let lastErr = "";
   for (const model of VISION) {
     try {
@@ -64,6 +68,7 @@ Reply with JSON only, no prose:
       if (!m) throw new Error("no json: " + String(txt).slice(0, 120));
       const o = JSON.parse(m[0]);
       if (!MOODS.includes(o.mood)) o.mood = "quiet";
+      if (element && ELEMENTS.includes(element)) o.element = element; else if (!ELEMENTS.includes(o.element)) o.element = null;
       o.vision = model;
       return o;
     } catch (e) { lastErr = `${model}: ${(e as Error).message}`; console.warn("vision failed", lastErr); }
@@ -75,7 +80,7 @@ async function paint(photoB64: string, c: Record<string, string>, wantStyle?: st
   const hf = new InferenceClient(HF);
   const spot = `${c.where === "center" ? "centre" : c.where} ${c.height === "middle" ? "middle" : c.height === "top" ? "upper part" : "lower part"}`;
   const styleKey = wantStyle && STYLES[wantStyle] ? wantStyle : Object.keys(STYLES)[Math.floor(Math.random() * Object.keys(STYLES).length)];
-  const prompt = `Add one ${c.mood} creature to this photo: ${c.look}. It is born from the ${c.subject} and made partly of ${c.material}. It is a living, animal-like creature, solid and fully visible, at the ${spot} of the scene, on or beside the ${c.subject}, lit like the photo, with a soft shadow where it touches. Draw the creature as ${STYLES[styleKey]}. Exactly one creature. Keep everything else in the photo unchanged.`;
+  const prompt = `Add one ${c.mood} creature to this photo: ${c.look}. It is born from the ${c.subject} and made partly of ${c.material}. It is a living, animal-like creature, solid and fully visible, at the ${spot} of the scene, on or beside the ${c.subject}, lit like the photo, with a soft shadow where it touches. Draw the creature as ${STYLES[styleKey]}.${RARITY[c.rarity] || ""} Exactly one creature. Keep everything else in the photo unchanged.`;
   let lastErr = "";
   const order = wantPainter ? [wantPainter] : (Math.random() < 0.5 ? PAINTERS : [...PAINTERS].reverse());   // testing: both painters in rotation, other one is the fallback
   for (const model of order) {
@@ -96,6 +101,7 @@ async function store(username: string, b: Record<string, unknown>, bytes: Uint8A
     username, plate_id: String(b.plateId), taken_at: b.takenAt ? new Date(Number(b.takenAt)).toISOString() : null,
     kind: meta.kind, name: meta.name, mood: meta.mood, subject: meta.subject ?? null, lore: meta.lore, reflection: String(b.reflection ?? meta.reflection ?? "").slice(0, 600),
     painter: meta.painter, lat: b.lat ?? null, lon: b.lon ?? null, image_path: path,
+    element: meta.element ?? null, rarity: meta.rarity ?? null,
   };
   const { data, error } = await db.from("creatures").upsert(row, { onConflict: "username,plate_id" }).select().single();
   if (error) throw error;
@@ -132,7 +138,8 @@ Deno.serve(async (req) => {
     if (!username) return json({ error: "Sign in again." }, 401);
     if (b.action === "conjure") {
       if (!HF) return json({ error: "The server has no Hugging Face token yet." }, 503);
-      const meta: Record<string, any> = await readPhoto(b.photo, b.reflection);
+      const meta: Record<string, any> = await readPhoto(b.photo, b.reflection, b.element);
+      if (b.rarity && b.rarity in RARITY) meta.rarity = b.rarity;
       try {
         const p = await paint(b.photo, meta, b.style, b.painter);   // style/painter overrides are for side-by-side tests
         meta.painter = p.painter + " · " + p.style;

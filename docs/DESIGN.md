@@ -220,3 +220,15 @@ Every sound is synthesised in the browser, with no audio files. **Claude.** Chim
 - Map: Leaflet by Volodymyr Agafonkin (BSD-2). Map data © OpenStreetMap contributors.
 - Painters: Pollinations.ai; FLUX.1 Kontext [dev] by Black Forest Labs, through Hugging Face Inference Providers.
 - Design references: Professor Layton (Level-5), Wii gesture play (Nintendo), wet-darkroom practice.
+
+## v0.4 — the walk loop (Phase 1 of the movement rethink, 18 Nov 2026)
+
+Full decisions: Personal project docs `claude/walking-app/movement-rethink-spec.md` and `build-plan.md`; Yacoub's words in `voice-notes-2026-11-18.md`.
+
+- **Home is the Study:** a desk with the camera (start a walk), the journal and a lava lamp; the map on the wall; the darkroom door with a count of waiting plates. The darkroom only opens off-walk and develops every waiting plate.
+- **Start ritual:** swipe the back open → pick a film canister (one-word intention: Patience, Grace, Ease, Healing, Newness, Compassion, from DoYouYoga) → swap freely while open → swipe closed → light the lantern (home = where the walk starts) → step out.
+- **Outside, three screens:** Map ← Compass → Camera with a 3D turn, tabs and a mini camera button. Compass: time, distance, North / Take me home / Nearest creature (wild, your own or friends', within 500 m). Map: OpenStreetMap under parchment fog that clears ~18 m around you and stays clear (stored as ~9 m cells).
+- **Wild creatures:** 3 per walk, 150–500 m from home, nudged onto the nearest street (OSRM), shown through the fog with element and rarity. A photo within 20 m claims one; its element and rarity go to the creature server.
+- **Coming home:** within 50 m of the lantern (after 150 m walked) the compass warms and turns home; hold to end → door closes → Study → summary card, saved as a journal page with the route and a play button.
+- **Server:** the vision model now also picks one of six elements (or takes the wild one); rarity adds a phrase to the painting prompt; `creatures.element` and `creatures.rarity` columns added.
+- Not yet: radar pings, turn-by-turn, native shell, Study/camera art pass, Yacoub's own sounds.
