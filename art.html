@@ -1,0 +1,6 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Camera Art</title><style>body{margin:0;background:#140d08;color:#ead9b0;font:16px Georgia,serif;padding:16px}h1{font-weight:400;color:#f3dc93}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:14px}figure{margin:0;background:#2a1d12;padding:8px;border-radius:6px}img{width:100%;display:block;border-radius:4px}figcaption{font:13px monospace;padding-top:6px}</style></head>
+<body><h1>Camera art, first pass</h1><p>Generated with FLUX.1 [dev] through Hugging Face. Tell Claude which to keep, redo or restyle.</p><div class="g" id="g"></div>
+<script>const B='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/';
+['study-room','camera','journal','door','window-dark','window-lit','map','compass','parchment'].forEach(n=>{const f=document.createElement('figure');f.innerHTML=`<img src="${B+n}.jpg?v=1" alt="${n}"><figcaption>${n}</figcaption>`;document.getElementById('g').append(f)})</script></body></html>

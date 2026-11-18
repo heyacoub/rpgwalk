@@ -347,6 +347,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
 .modes button[aria-pressed=true]{background:var(--brass);color:var(--ink)}
 .readout{margin:0;min-height:2.6em;text-align:center;font-style:italic;max-width:30ch}
 #pCam .plate{transform:scale(.92)}
+#leaveDark{position:absolute;z-index:5;top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 8px);color:#ffb9a6;opacity:.8}
 #door{position:fixed;inset:0;z-index:44;background:#0a0603;display:flex;align-items:center;justify-content:center;padding:30px;text-align:center;font:italic 22px/1.4 var(--body);color:var(--parch);opacity:0;transition:opacity .6s;pointer-events:none}
 #door.on{opacity:1;pointer-events:auto}
 #sum{position:fixed;inset:0;z-index:42;background:rgba(10,6,3,.9);display:grid;place-items:center;padding:20px;overflow-y:auto;touch-action:pan-y}
@@ -364,6 +365,28 @@ body[data-room=dark] #cap{color:#ffb9a6}
 .jrow{text-align:left;padding:12px 14px;border-radius:6px;border:0;background:#efe6cf;color:var(--ink);font:16px var(--body);display:flex;justify-content:space-between;gap:10px;min-height:52px}
 .jrow b{font:400 18px var(--disp)}
 .small{min-height:40px;padding:6px 14px;font-size:15px}
+
+/* ---- painted art (FLUX.1 [dev] via Hugging Face), feathered into the room ---- */
+:root{--art:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/study-room.jpg)}
+#study.leather{background:linear-gradient(rgba(12,7,4,.35),rgba(12,7,4,.55)),var(--art) center/cover,#1a0f09}
+#study.leather::before{display:none}
+.feather{-webkit-mask-image:radial-gradient(closest-side,#000 70%,transparent 100%);mask-image:radial-gradient(closest-side,#000 70%,transparent 100%)}
+.wallmap{background:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/map.jpg) center/cover;border-color:#2b1a0e}
+.wallmap::before{display:none}
+.wallmap span{position:absolute;left:8px;bottom:8px;font-size:14px;background:rgba(234,217,176,.9)}
+.door{background:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/door.jpg) center/cover;box-shadow:0 10px 24px rgba(0,0,0,.6)}
+.door::after{display:none}
+.door .sign{margin-top:auto}.door .sign2{margin-bottom:14px;background:rgba(10,6,3,.75);border-radius:4px;padding:2px 8px}
+.window{border:0;background:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/window-dark.jpg) center/cover;box-shadow:0 10px 24px rgba(0,0,0,.6)}
+.window.lit{background-image:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/window-lit.jpg)}
+.window::before,.window::after,.window .lamp{display:none}
+.desk{background:linear-gradient(rgba(58,36,20,.55),rgba(30,18,10,.85));box-shadow:inset 0 2px 0 rgba(255,220,160,.15),0 10px 20px rgba(0,0,0,.5)}
+.deskcam,.book{background:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/camera.jpg) center 40%/cover;border:0;min-height:120px;justify-content:flex-end;padding-bottom:8px;box-shadow:0 8px 16px rgba(0,0,0,.55);border-radius:12px}
+.book{background-image:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/journal.jpg)}
+.deskcam .lensd{display:none}
+.deskcam span,.book span,.book small{background:rgba(10,6,3,.72);color:var(--brass-hi);padding:1px 8px;border-radius:4px}
+.bigrose{background:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/compass.jpg) center/118% no-repeat,radial-gradient(#f6ecd0,#d9c79a)}
+.bigrose .cn{display:none}
 @media (prefers-reduced-motion:reduce){.goo i,.panel,.hatch2{animation:none;transition:none}}
 @media (prefers-reduced-motion:reduce){.hung,.cl.body,.breath,#needle.full,.dark.pullme .chain b{animation:none}}
 </style>
@@ -467,6 +490,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
   <button class="brass" id="toLine" hidden>Take them down</button>
   <div class="safelight"></div>
   <button class="chain" id="chain" aria-label="Pull the light chain"><i></i><b></b></button>
+  <button class="ghost" id="leaveDark">leave the darkroom</button>
 </section>
 
 <section class="room leather" id="album">
@@ -508,6 +532,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
       <li>Design references: the Professor Layton games (Level-5) for the hand-made puzzle-object feel, Wii-era gesture play (Nintendo), and the tray-rocking of a real wet darkroom.</li>
       <li>Walk intentions (Patience, Grace, Ease, Healing, Newness, Compassion) come from <a href="https://www.doyouyoga.com/5-ways-to-set-powerful-home-practice-intentions/" target="_blank" rel="noopener">DoYouYoga's guide to setting practice intentions</a>.</li>
       <li>Wild creatures are nudged onto the nearest street with the <a href="https://project-osrm.org" target="_blank" rel="noopener">Project OSRM</a> demo server (BSD-2), using OpenStreetMap data.</li>
+      <li>Study, door, window, map, camera, journal, compass and parchment art: generated with FLUX.1 [dev] by Black Forest Labs, through Hugging Face Inference Providers.</li>
       <li>Every sound is synthesised in the browser. The camera, gauge, darkroom and clockwork creatures are drawn in code.</li>
     </ul>
     <button class="brass" id="shut">Close the workshop</button>
@@ -987,7 +1012,7 @@ async function drawMap(list){const pts=(list||[]).filter(p=>p.lat!=null),m=$('#m
 const INTENTS=[['Patience','#cfe1ec'],['Grace','#ecd9ef'],['Ease','#d8ead0'],['Healing','#f3d6c8'],['Newness','#f4e7b4'],['Compassion','#e9dfd0']];  /* words from DoYouYoga's intention guide */
 const ELEMENTS=['Water','Stone','Leaf','Ember','Sky','City'],ELCOL={Water:'#3b7fb8',Stone:'#7d7468',Leaf:'#4f8a3a',Ember:'#c8502a',Sky:'#7aa7d8',City:'#8a6a22'};
 const waiting=p=>!p.dev&&(p.roll!==S.roll.id||S.roll.ended||!S.walk);
-const FOG=new Set(S.fog);const CELL=.00008;   /* about 9 m */
+const FOG=new Set(S.fog);const parch=new Image();parch.crossOrigin='anonymous';parch.src='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/parchment.jpg';parch.onload=()=>{if(room==='out'&&panel===0)drawFog()};const CELL=.00008;   /* about 9 m */
 let panel=1,mmap=null,follow=true,nearby=[];
 const fmtT=ms=>{const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60;return h?h+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'):m+':'+String(sec).padStart(2,'0')};
 const fmtD=m=>(m/1000).toFixed(2)+' km';
@@ -995,7 +1020,7 @@ function dest(a,brg,d){const R=6371000,p=Math.PI/180,la=a.lat*p,lo=a.lon*p,b=brg
   la2=Math.asin(Math.sin(la)*Math.cos(dr)+Math.cos(la)*Math.sin(dr)*Math.cos(b)),lo2=lo+Math.atan2(Math.sin(b)*Math.sin(dr)*Math.cos(la),Math.cos(dr)-Math.sin(la)*Math.sin(la2));return{lat:la2/p,lon:lo2/p}}
 function door(text,ms){const d=$('#door');d.textContent=text;d.classList.add('on');return new Promise(r=>setTimeout(()=>{d.classList.remove('on');setTimeout(r,500)},ms))}
 /* the Study */
-async function enterStudy(){hum.off();slosh.off();fork.off();camStop();go('study');$('#lamp').classList.toggle('lit',!!S.walk);
+async function enterStudy(){hum.off();slosh.off();fork.off();camStop();go('study');$('#lamp').classList.toggle('lit',!!S.walk);document.querySelector('.window').classList.toggle('lit',!!S.walk);
   const n=(await DB.all()).filter(waiting).length;$('#darkSign').textContent=n?n+' plate'+(n>1?'s':'')+' waiting':'no plates waiting';
   $('#bookCount').textContent=S.pages.length?S.pages.length+' page'+(S.pages.length>1?'s':''):'empty';$('#darkDoor').classList.toggle('closed',!n);
   $('#toAlbum').hidden=!known.length}
@@ -1046,7 +1071,7 @@ async function showMap(){try{await leaflet()}catch(e){return say('The map could 
 function drawFog(){if(!mmap||!mmap._loaded)return;const cv=$('#fog'),r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1);
   if(cv.width!==Math.round(r.width*dpr)){cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr)}
   const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.globalCompositeOperation='source-over';x.clearRect(0,0,r.width,r.height);
-  const g=x.createLinearGradient(0,0,r.width,r.height);g.addColorStop(0,'#eadcb4');g.addColorStop(1,'#d9c491');x.fillStyle=g;x.fillRect(0,0,r.width,r.height);
+  const g=x.createLinearGradient(0,0,r.width,r.height);g.addColorStop(0,'#eadcb4');g.addColorStop(1,'#d9c491');x.fillStyle=g;x.fillRect(0,0,r.width,r.height);if(parch.complete&&parch.naturalWidth){x.globalAlpha=.85;x.fillStyle=x.createPattern(parch,'repeat');x.fillRect(0,0,r.width,r.height);x.globalAlpha=1}
   x.strokeStyle='rgba(120,90,40,.18)';x.lineWidth=1;for(let i=-r.height;i<r.width;i+=26){x.beginPath();x.moveTo(i,0);x.lineTo(i+r.height,r.height);x.stroke()}
   const ctr=mmap.getCenter(),mpp=40075016.686*Math.cos(ctr.lat*Math.PI/180)/Math.pow(2,mmap.getZoom()+8),rad=Math.max(6,18/mpp),b=mmap.getBounds().pad(.1);
   x.globalCompositeOperation='destination-out';
@@ -1101,6 +1126,8 @@ function enterJournal(){const l=$('#jList');l.innerHTML='';if(!S.pages.length)l.
 function wireWalk(){
   $('#deskCam').addEventListener('click',()=>{askMotion();enterRitual()});$('#deskBook').addEventListener('click',enterJournal);$('#jBack').addEventListener('click',enterStudy);
   $('#darkDoor').addEventListener('click',()=>{sfx.click();enterDark()});
+  $('#leaveDark').addEventListener('click',()=>{sfx.fold();hum.off();slosh.off();dk.stage='off';dk.cur=null;dk.cr=null;   /* anything not yet lifted out stays a waiting plate */
+    document.querySelectorAll('.inkfall').forEach(x=>x.remove());enterStudy();say('Back in the Study. Unfinished plates are still waiting.',5000)});
   $('#wallMap').addEventListener('click',()=>{go('out');setPanel(0)});$('#mmBack').addEventListener('click',enterStudy);
   $('#rCancel').addEventListener('click',()=>{S.roll=fresh();save();enterStudy()});
   const hb=$('#camBack');hb.addEventListener('pointerdown',e=>{hx=e.clientX});
