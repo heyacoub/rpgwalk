@@ -19,6 +19,8 @@ const VISION = ["google/gemma-4-31B-it", "Qwen/Qwen2.5-VL-7B-Instruct", "google/
 const PAINTERS = ["black-forest-labs/FLUX.1-Kontext-dev", "black-forest-labs/FLUX.2-dev"];
 // Art styles, written as plain descriptions of how the reference games look (no names, no copied art).
 // One is picked at random per creature, so the camera has range.
+// Two looks Yacoub liked in the bake-off (18 Nov): "toy in the real world" (village, pocket) and
+// "whole photo becomes an illustration" (storybook, forest). All four stay in random rotation for testing.
 const STYLES: Record<string, string> = {
   storybook: "a hand-drawn storybook illustration with warm, loose ink linework, soft watercolour washes and a muted, earthy palette, slightly whimsical proportions",   // Professor Layton
   village: "a soft, rounded, toy-like look with simple chunky shapes, matte pastel colours and gentle ambient light",                                                   // Animal Crossing
@@ -75,7 +77,8 @@ async function paint(photoB64: string, c: Record<string, string>, wantStyle?: st
   const styleKey = wantStyle && STYLES[wantStyle] ? wantStyle : Object.keys(STYLES)[Math.floor(Math.random() * Object.keys(STYLES).length)];
   const prompt = `Add one ${c.mood} creature to this photo: ${c.look}. It is born from the ${c.subject} and made partly of ${c.material}. It is a living, animal-like creature, solid and fully visible, at the ${spot} of the scene, on or beside the ${c.subject}, lit like the photo, with a soft shadow where it touches. Draw the creature as ${STYLES[styleKey]}. Exactly one creature. Keep everything else in the photo unchanged.`;
   let lastErr = "";
-  for (const model of (wantPainter ? [wantPainter] : PAINTERS)) {
+  const order = wantPainter ? [wantPainter] : (Math.random() < 0.5 ? PAINTERS : [...PAINTERS].reverse());   // testing: both painters in rotation, other one is the fallback
+  for (const model of order) {
     try {
       const blob = await hf.imageToImage({ model, inputs: new Blob([b64ToBytes(photoB64)], { type: "image/jpeg" }), parameters: { prompt } });
       return { bytes: new Uint8Array(await blob.arrayBuffer()), type: blob.type || "image/jpeg", painter: model, style: styleKey };
