@@ -5,7 +5,7 @@
 <body><h1>Camera art</h1><p>Painted forest and three variations on it, the same eight pieces in each. Generated with FLUX.1 [dev] through Hugging Face. Pick a style here, then switch the app to it in the workshop (Art style).</p>
 <div class="tabs" id="t"></div><div class="g" id="g"></div>
 <script>const B='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/',S={forest:'Painted forest',amber:'Amber',moon:'Moonlit',sketch:'Sketchbook'},
-N=['study-room','camera','journal','door','window-dark','window-lit','map','compass'];let cur='forest';
+N=['study-room','camera','journal','door','window-dark','window-lit','map','compass'];let cur='amber';
 function draw(){document.getElementById('t').innerHTML='';Object.entries(S).forEach(([k,v])=>{const b=document.createElement('button');b.textContent=v;b.setAttribute('aria-pressed',k===cur);b.onclick=()=>{cur=k;draw()};document.getElementById('t').append(b)});
   const g=document.getElementById('g');g.innerHTML='';const pre=cur+'-';N.forEach(n=>{const f=document.createElement('figure');f.innerHTML=`<img src="${B+pre+n}.jpg?v=3" alt="${S[cur]} ${n}" loading="lazy"><figcaption>${n}</figcaption>`;g.append(f)})}
 draw()</script></body></html>
