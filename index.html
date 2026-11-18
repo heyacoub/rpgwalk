@@ -321,7 +321,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
   padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom,0px) + 140px) max(16px,env(safe-area-inset-left))}
 #pMap{padding:0}
 #mm{position:absolute;inset:0;background:#e9dcb8}
-#mm .leaflet-tile-pane{filter:sepia(.45) saturate(1.5) hue-rotate(-8deg) contrast(.92) brightness(1.06)}
+#mm .leaflet-tile-pane{filter:sepia(.55) saturate(1.6) hue-rotate(-12deg) contrast(1.05)}
 #fog{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:500}
 #mmBack{position:absolute;z-index:600;top:calc(env(safe-area-inset-top,0px) + 14px);left:50%;transform:translateX(-50%)}
 .tabs3{position:absolute;z-index:20;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);display:flex;justify-content:center;gap:8px}
@@ -387,6 +387,28 @@ body[data-room=dark] #cap{color:#ffb9a6}
 .deskcam span,.book span,.book small{background:rgba(10,6,3,.72);color:var(--brass-hi);padding:1px 8px;border-radius:4px}
 .bigrose{background:var(--a-compass) center/118% no-repeat,radial-gradient(#f6ecd0,#d9c79a)}
 .bigrose .cn{display:none}
+
+/* ---- the Study as one painted scene: tap the things in it ---- */
+#study{padding:0;justify-content:center;background:#140b05}
+#study.leather{background:radial-gradient(#3a2414,#0d0704)}
+#study::after{content:"";position:absolute;inset:-30px;background:var(--a-scene) center/cover;filter:blur(24px) brightness(.45);z-index:0}
+.scene{position:relative;z-index:1;height:min(100%,calc(100vw * 1344 / 768));aspect-ratio:768/1344;max-width:100%;background:var(--a-scene) center/100% 100% no-repeat;box-shadow:0 0 40px rgba(0,0,0,.7)}
+.hot{position:absolute;border:0;background:none;border-radius:14px;padding:0;display:flex;align-items:flex-end;justify-content:center;transition:box-shadow .3s,background .3s}
+.hot:hover,.hot:focus-visible,.hot:active{background:rgba(255,214,140,.12);box-shadow:0 0 0 2px rgba(255,214,140,.55),0 0 24px rgba(255,190,90,.45);outline:none}
+.hot .tag{transform:translateY(60%);font:13px var(--type);letter-spacing:.04em;color:var(--brass-hi);background:rgba(20,12,6,.78);border:1px solid rgba(201,162,74,.5);padding:2px 9px;border-radius:10px;white-space:nowrap;pointer-events:none}
+#wallMap .tag{transform:translateY(40%)}
+#study .window{position:absolute;left:19%;top:49%;width:8%;height:9%;border:0;background:none;box-shadow:none;min-height:0;pointer-events:none;z-index:1}
+#study .window .glow{position:absolute;inset:-160%;border-radius:50%;background:radial-gradient(circle,rgba(255,220,130,.85),rgba(255,170,60,.35) 35%,transparent 65%);opacity:0;transition:opacity 1.2s;display:block;mix-blend-mode:screen}
+#study .window.lit .glow{opacity:1;animation:flick 3s ease-in-out infinite}
+@keyframes flick{0%,100%{opacity:.9}50%{opacity:1}}
+.lavaov{position:absolute;left:74%;top:58%;width:14%;height:20%;clip-path:polygon(15% 0,85% 0,100% 100%,0 100%);mix-blend-mode:screen;opacity:.85;filter:blur(3px);pointer-events:none}
+.lavaov i{position:absolute;left:50%;border-radius:50%;background:radial-gradient(#ffb36b,#ff6a2a 60%,transparent 72%);animation:goo 10s ease-in-out infinite}
+.lavaov i:nth-child(1){width:46%;height:22%;margin-left:-23%}
+.lavaov i:nth-child(2){width:34%;height:18%;margin-left:-6%;animation-duration:13s;animation-delay:-5s}
+.lavaov i:nth-child(3){width:28%;height:14%;margin-left:-26%;animation-duration:16s;animation-delay:-9s}
+#study .foot{position:absolute;z-index:2;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 70px)}
+#study .foot .ghost{color:var(--parch);text-shadow:0 1px 3px #000}
+@media (prefers-reduced-motion:reduce){.lavaov i,#study .window.lit .glow{animation:none}}
 @media (prefers-reduced-motion:reduce){.goo i,.panel,.hatch2{animation:none;transition:none}}
 @media (prefers-reduced-motion:reduce){.hung,.cl.body,.breath,#needle.full,.dark.pullme .chain b{animation:none}}
 </style>
@@ -396,15 +418,15 @@ body[data-room=dark] #cap{color:#ffb9a6}
 
 
 <section class="room leather on" id="study">
-  <div class="studyw">
-    <button class="wallmap" id="wallMap" aria-label="The map on the wall: everything you have uncovered"><span>the world you've uncovered</span></button>
-    <div class="window" aria-hidden="true"><div class="lamp" id="lamp"></div></div>
-    <button class="door" id="darkDoor" aria-label="Darkroom door"><span class="sign">DARKROOM</span><span class="sign2" id="darkSign">no plates waiting</span></button>
-    <div class="desk">
-      <button class="deskcam" id="deskCam" aria-label="The camera. Start a walk."><i class="lensd"></i><span>start a walk</span></button>
-      <button class="book" id="deskBook" aria-label="The journal"><span>journal</span><small id="bookCount"></small></button>
-      <div class="lava" aria-hidden="true"><div class="goo"><i></i><i></i><i></i><i></i></div></div>
-    </div>
+  <div class="scene" id="scene">
+    <div class="window" aria-hidden="true"><i class="glow" id="lamp"></i></div>
+    <div class="lavaov" aria-hidden="true"><i></i><i></i><i></i></div>
+    <button class="hot" id="wallMap" style="left:18%;top:5%;width:64%;height:19%" aria-label="The map on the wall: the world you've uncovered"><span class="tag">the map</span></button>
+    <button class="hot" id="hWindow" style="left:6%;top:28%;width:34%;height:30%" aria-label="The window and the lantern"><span class="tag" id="windowTag">the lantern</span></button>
+    <button class="hot" id="darkDoor" style="left:56%;top:28%;width:38%;height:27%" aria-label="The darkroom door"><span class="tag">darkroom · <span id="darkSign">empty</span></span></button>
+    <button class="hot" id="deskCam" style="left:7%;top:63%;width:33%;height:15%" aria-label="The camera. Start a walk."><span class="tag">start a walk</span></button>
+    <button class="hot" id="deskBook" style="left:42%;top:75%;width:28%;height:10%" aria-label="The journal"><span class="tag">journal · <span id="bookCount"></span></span></button>
+    <button class="hot" id="hLava" style="left:72%;top:55%;width:18%;height:27%" aria-label="The lava lamp"></button>
   </div>
   <div class="foot"><button class="ghost" id="toAlbum">the drying line</button><button class="ghost" id="cog">workshop</button></div>
 </section>
@@ -518,6 +540,10 @@ body[data-room=dark] #cap{color:#ffb9a6}
     <label><input type="radio" name="art" value="amber"><span><b>Amber.</b> Golden-hour light, rich brushwork, deep warm shadows.</span></label>
     <label><input type="radio" name="art" value="moon"><span><b>Moonlit.</b> Blue-green night, mist, small warm lanterns.</span></label>
     <label><input type="radio" name="art" value="sketch"><span><b>Sketchbook.</b> Light gouache on paper, pencil showing through.</span></label>
+    <h3>Study painting</h3>
+    <label><input type="radio" name="scene" value="a"><span>Painting A</span></label>
+    <label><input type="radio" name="scene" value="b"><span>Painting B</span></label>
+    <label><input type="radio" name="scene" value="c"><span>Painting C</span></label>
     <h3>Bench testing</h3>
     <label><input type="checkbox" id="setBench"><span>Fast mode: 8-second mount, 20-second wind, home counts after 30 m.</span></label>
     <label><input type="checkbox" id="setManual"><span>Buttons instead of gestures.</span></label>
@@ -532,7 +558,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
     <h3>Credits</h3>
     <ul>
       <li>Typefaces: IM Fell English and IM Fell English SC by Igino Marini, Caveat by Impallari Type (SIL Open Font License), Special Elite by Astigmatic (Apache 2.0), served by Google Fonts.</li>
-      <li>Map: <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a> by Volodymyr Agafonkin (BSD-2). Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>.</li>
+      <li>Map: <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a> by Volodymyr Agafonkin (BSD-2). Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>; walking-map tiles © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>.</li>
       <li>Creature painting: a vision model (Qwen2.5-VL by Alibaba Qwen, or GLM-4.5V by Z.ai) reads the photo, and FLUX.1 Kontext [dev] by Black Forest Labs paints the creature in, both through Hugging Face Inference Providers. Accounts and storage: <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a>.</li>
       <li>Design references: the Professor Layton games (Level-5) for the hand-made puzzle-object feel, Wii-era gesture play (Nintendo), and the tray-rocking of a real wet darkroom.</li>
       <li>Walk intentions (Patience, Grace, Ease, Healing, Newness, Compassion) come from <a href="https://www.doyouyoga.com/5-ways-to-set-powerful-home-practice-intentions/" target="_blank" rel="noopener">DoYouYoga's guide to setting practice intentions</a>.</li>
@@ -939,6 +965,7 @@ function pour(){const n=$('#note'),slip=$('#slip'),text=n.value.trim();if(text.l
   [...text.slice(0,180)].forEach((ch,i)=>{const s=el('span');s.textContent=ch;s.style.animationDelay=(i*11)+'ms';
     s.style.setProperty('--dx',((Math.random()-.5)*70)+'px');s.style.setProperty('--r',((Math.random()-.5)*120)+'deg');f.append(s)});
   document.body.append(f);slip.classList.add('gone');
+  dk.jobs=new Map(dk.plates.map(pl=>[pl.id,conjure(pl)]));   /* paint every plate at once, while you rock the first */
   setTimeout(()=>{showTray();startPlate()},1500);setTimeout(()=>f.remove(),4600)}
 function showTray(){benchEl.innerHTML=`<div class="tray" id="tray"><div class="bath"><div class="paper" id="paper"></div><div class="liquid"></div></div></div>
     <button class="brass" id="lift" hidden>Lift it out</button>`;
@@ -949,7 +976,7 @@ function showTray(){benchEl.innerHTML=`<div class="tray" id="tray"><div class="b
 function startPlate(){const pl=dk.plates[dk.i],paper=$('#paper');dk.p=0;dk.cr=null;dk.stall=0;dk.told=false;
   paper.className='paper';paper.innerHTML='';paper.style.width=`min(80%, ${42*pl.w/pl.h}vh)`;
   const pr=printEl(pl);pr.classList.add('dev');pr.querySelector('.photo').style.opacity=0;paper.append(pr);dk.cur={pl,pr};$('#lift').hidden=true;
-  conjure(pl).then(c=>{if(dk.cur&&dk.cur.pl===pl&&!dk.cr){dk.cr=c;addFinal(pr,c.final);renderDev()}});
+  ((dk.jobs&&dk.jobs.get(pl.id))||conjure(pl)).then(c=>{if(dk.cur&&dk.cur.pl===pl&&!dk.cr){dk.cr=c;addFinal(pr,c.final);renderDev()}});
   dk.stage='dev';slosh.on();say(dk.i?'The next plate. Rock the tray.':(M.have?'Your words are in the water. Tilt the phone to rock the tray.':'Your words are in the water. Drag the tray side to side.'))}
 function renderDev(){if(!dk.cur)return;const p=dk.p,pr=dk.cur.pr,ph=pr.querySelector('.photo'),q=smooth(p,.06,.8);
   ph.style.opacity=smooth(p,.06,.6);ph.style.filter=`grayscale(1) contrast(${lerp(.3,1.06,q).toFixed(3)}) brightness(${lerp(2.6,1,q).toFixed(3)})`;
@@ -960,7 +987,7 @@ function tickDark(dt){let g;if(M.have&&!S.set.manual)g=clamp(M.gamma,-40,40);els
   darkEl.style.setProperty('--tilt',(g*.11).toFixed(2));darkEl.style.setProperty('--slosh',(g/40).toFixed(3));
   slosh.set((n,t)=>{n.g.gain.setTargetAtTime(dk.stage==='dev'?dk.energy*.16:0,t,.12);n.f.frequency.setTargetAtTime(450+dk.energy*900,t,.1)});
   if(dk.stage!=='dev')return;
-  let np=dk.p+(.05+dk.energy*.42)*dt;
+  let np=dk.p+(.14+dk.energy*.7)*dt;
   if(np>.84&&!dk.cr){np=Math.max(dk.p,Math.min(np,.84));dk.stall+=dt;       /* the photo is up; wait for whoever is hiding in it */
     if(dk.stall>4&&!dk.told){dk.told=true;say('Something is taking shape. Keep rocking.')}
     if(dk.stall>150){dk.stall=-1e9;say('The spirit is slow tonight. Keep rocking.')}}
@@ -1017,10 +1044,11 @@ async function drawMap(list){const pts=(list||[]).filter(p=>p.lat!=null),m=$('#m
 const INTENTS=[['Patience','#cfe1ec'],['Grace','#ecd9ef'],['Ease','#d8ead0'],['Healing','#f3d6c8'],['Newness','#f4e7b4'],['Compassion','#e9dfd0']];  /* words from DoYouYoga's intention guide */
 const ELEMENTS=['Water','Stone','Leaf','Ember','Sky','City'],ELCOL={Water:'#3b7fb8',Stone:'#7d7468',Leaf:'#4f8a3a',Ember:'#c8502a',Sky:'#7aa7d8',City:'#8a6a22'};
 const waiting=p=>!p.dev&&(p.roll!==S.roll.id||S.roll.ended||!S.walk);
+const SCENES={a:'study-a.jpg',b:'study-b.jpg',c:'study-c.png'};function setScene(k){S.set.scene=SCENES[k]?k:'a';document.documentElement.style.setProperty('--a-scene',`url(${ARTB}${SCENES[S.set.scene]})`);save()}
 const ARTB='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/',ART_N={room:'study-room',map:'map',door:'door',wdark:'window-dark',wlit:'window-lit',cam:'camera',book:'journal',compass:'compass'};
 function setArt(k){S.set.art=k;const pre=k&&k!=='storybook'?k+'-':'';for(const v in ART_N)document.documentElement.style.setProperty('--a-'+v,`url(${ARTB}${pre}${ART_N[v]}.jpg)`);save()}
-if(!['forest','amber','moon','sketch'].includes(S.set.art)||!S.artV2){S.set.art='amber';S.artV2=1}setArt(S.set.art);
-const FOG=new Set(S.fog);const parch=new Image();parch.crossOrigin='anonymous';parch.src='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/parchment.jpg';parch.onload=()=>{if(room==='out'&&panel===0)drawFog()};const CELL=.00008;   /* about 9 m */
+if(!['forest','amber','moon','sketch'].includes(S.set.art)||!S.artV2){S.set.art='amber';S.artV2=1}setArt(S.set.art);if(!S.sceneV){S.set.scene='c';S.sceneV=1}setScene(S.set.scene);
+const FOG=new Set(S.fog);const CELL=.00008;   /* about 9 m */
 let panel=1,mmap=null,follow=true,nearby=[];
 const fmtT=ms=>{const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60;return h?h+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'):m+':'+String(sec).padStart(2,'0')};
 const fmtD=m=>(m/1000).toFixed(2)+' km';
@@ -1029,8 +1057,8 @@ function dest(a,brg,d){const R=6371000,p=Math.PI/180,la=a.lat*p,lo=a.lon*p,b=brg
 function door(text,ms){const d=$('#door');d.textContent=text;d.classList.add('on');return new Promise(r=>setTimeout(()=>{d.classList.remove('on');setTimeout(r,500)},ms))}
 /* the Study */
 async function enterStudy(){hum.off();slosh.off();fork.off();camStop();go('study');$('#lamp').classList.toggle('lit',!!S.walk);document.querySelector('.window').classList.toggle('lit',!!S.walk);
-  const n=(await DB.all()).filter(waiting).length;$('#darkSign').textContent=n?n+' plate'+(n>1?'s':'')+' waiting':'no plates waiting';
-  $('#bookCount').textContent=S.pages.length?S.pages.length+' page'+(S.pages.length>1?'s':''):'empty';$('#darkDoor').classList.toggle('closed',!n);
+  const n=(await DB.all()).filter(waiting).length;$('#darkSign').textContent=n?n+' plate'+(n>1?'s':'')+' waiting':'empty';$('#windowTag').textContent=S.walk?'the lantern is lit':'the lantern';
+  $('#bookCount').textContent=S.pages.length?S.pages.length+' page'+(S.pages.length>1?'s':''):'empty';
   $('#toAlbum').hidden=!known.length}
 /* loading the camera */
 let rStep=1,hx=null;
@@ -1072,16 +1100,17 @@ function setPanel(i){panel=clamp(i,0,2);['#pMap','#pCompass','#pCam'].forEach((i
   const walking=!!S.walk;$('#tabs3').hidden=!walking;$('#miniCam').hidden=!walking||panel===2;$('#mmBack').hidden=walking;
   if(panel===0)showMap();if(panel!==0)follow=true}
 async function showMap(){try{await leaflet()}catch(e){return say('The map could not load.',4000)}
-  if(!mmap){mmap=L.map('mm',{zoomControl:false,attributionControl:true});L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(mmap);
+  if(!mmap){mmap=L.map('mm',{zoomControl:false,attributionControl:true});L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:20,subdomains:'abcd',attribution:'© OpenStreetMap contributors © CARTO'}).addTo(mmap);
     mmap.on('move zoom resize',drawFog);mmap.on('dragstart',()=>follow=false)}
   const c=S.fix||(S.walk&&S.walk.home);mmap.invalidateSize();
-  if(c&&(follow||!mmap._loaded))mmap.setView([c.lat,c.lon],mmap._loaded?mmap.getZoom():17);else if(!mmap._loaded)mmap.setView([30.0444,31.2357],13);drawFog()}
+  if(c&&(follow||!mmap._loaded))mmap.setView([c.lat,c.lon],mmap._loaded?mmap.getZoom():18);else if(!mmap._loaded)mmap.setView([30.0444,31.2357],13);drawFog()}
+let grainC=null;function grain(){if(grainC)return grainC;grainC=el('canvas');grainC.width=grainC.height=128;const g=grainC.getContext('2d'),d=g.createImageData(128,128);   /* paper grain, drawn once */
+  for(let i=0;i<d.data.length;i+=4){const v=Math.random()*40;d.data[i]=120;d.data[i+1]=90;d.data[i+2]=40;d.data[i+3]=v}g.putImageData(d,0,0);return grainC}
 function drawFog(){if(!mmap||!mmap._loaded)return;const cv=$('#fog'),r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1);
   if(cv.width!==Math.round(r.width*dpr)){cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr)}
   const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.globalCompositeOperation='source-over';x.clearRect(0,0,r.width,r.height);
-  const g=x.createLinearGradient(0,0,r.width,r.height);g.addColorStop(0,'#eadcb4');g.addColorStop(1,'#d9c491');x.fillStyle=g;x.fillRect(0,0,r.width,r.height);if(parch.complete&&parch.naturalWidth){x.globalAlpha=.85;x.fillStyle=x.createPattern(parch,'repeat');x.fillRect(0,0,r.width,r.height);x.globalAlpha=1}
-  x.strokeStyle='rgba(120,90,40,.18)';x.lineWidth=1;for(let i=-r.height;i<r.width;i+=26){x.beginPath();x.moveTo(i,0);x.lineTo(i+r.height,r.height);x.stroke()}
-  const ctr=mmap.getCenter(),mpp=40075016.686*Math.cos(ctr.lat*Math.PI/180)/Math.pow(2,mmap.getZoom()+8),rad=Math.max(6,18/mpp),b=mmap.getBounds().pad(.1);
+  x.globalAlpha=.93;const g=x.createRadialGradient(r.width/2,r.height/2,r.height*.1,r.width/2,r.height/2,r.height*.75);g.addColorStop(0,'#eee2c0');g.addColorStop(1,'#cdb27a');x.fillStyle=g;x.fillRect(0,0,r.width,r.height);x.fillStyle=x.createPattern(grain(),'repeat');x.fillRect(0,0,r.width,r.height);x.globalAlpha=1;
+  const ctr=mmap.getCenter(),mpp=40075016.686*Math.cos(ctr.lat*Math.PI/180)/Math.pow(2,mmap.getZoom()+8),rad=Math.max(24,18/mpp),b=mmap.getBounds().pad(.1);
   x.globalCompositeOperation='destination-out';
   FOG.forEach(k=>{const[i,j]=k.split(',').map(Number),lat=i*CELL,lon=j*CELL/Math.cos(lat*Math.PI/180);if(!b.contains([lat,lon]))return;
     const pt=mmap.latLngToContainerPoint([lat,lon]),gr=x.createRadialGradient(pt.x,pt.y,rad*.35,pt.x,pt.y,rad);gr.addColorStop(0,'rgba(0,0,0,1)');gr.addColorStop(1,'rgba(0,0,0,0)');
@@ -1136,7 +1165,9 @@ function wireWalk(){
   $('#darkDoor').addEventListener('click',()=>{sfx.click();enterDark()});
   $('#leaveDark').addEventListener('click',()=>{sfx.fold();hum.off();slosh.off();dk.stage='off';dk.cur=null;dk.cr=null;   /* anything not yet lifted out stays a waiting plate */
     document.querySelectorAll('.inkfall').forEach(x=>x.remove());enterStudy();say('Back in the Study. Unfinished plates are still waiting.',5000)});
-  $('#wallMap').addEventListener('click',()=>{go('out');setPanel(0)});$('#mmBack').addEventListener('click',enterStudy);
+  $('#wallMap').addEventListener('click',()=>{go('out');setPanel(0)});
+  $('#hWindow').addEventListener('click',()=>{sfx.bell();say(S.walk?'The lantern is lit. It will guide you home.':'The lantern. You light it when you head out.',4000)});
+  let lavaT=0;$('#hLava').addEventListener('click',()=>{lavaT++;sfx.drip();document.querySelectorAll('.lavaov i').forEach(i=>i.style.animationDuration=(lavaT%2?3:10)+'s');say(lavaT%2?'Blub.':'',1500)});$('#mmBack').addEventListener('click',enterStudy);
   $('#rCancel').addEventListener('click',()=>{S.roll=fresh();save();enterStudy()});
   const hb=$('#camBack');hb.addEventListener('pointerdown',e=>{hx=e.clientX});
   hb.addEventListener('pointerup',e=>{const dx=hx==null?0:e.clientX-hx;hx=null;hatchTap(Math.abs(dx)<8?0:dx)});
@@ -1163,7 +1194,7 @@ function whoLine(){const l=$('#whoLine'),b=$('#whoBtn');if(!l)return;l.textConte
 let whoThen=null;
 function askWho(then){whoThen=then||null;$('#whoErr').hidden=true;$('#whoName').value=S.user?S.user.username:'';$('#whoPin').value='';$('#who').hidden=false;setTimeout(()=>$('#whoName').focus(),50)}
 function closeWho(){$('#who').hidden=true;const t=whoThen;whoThen=null;if(t)t()}
-function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);document.querySelectorAll('[name=art]').forEach(r=>r.checked=r.value===S.set.art);whoLine();$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
+function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);document.querySelectorAll('[name=art]').forEach(r=>r.checked=r.value===S.set.art);document.querySelectorAll('[name=scene]').forEach(r=>r.checked=r.value===S.set.scene);whoLine();$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
   $('#logOut').hidden=true;$('#erase').textContent='Erase everything';$('#shop').hidden=false}
 function wire(){
   wireWalk();
@@ -1174,6 +1205,7 @@ function wire(){
   $('#toLine').addEventListener('click',()=>{S.darkNote='';save();lastC=-1;enterAlbum()});
   document.querySelectorAll('[name=eng]').forEach(r=>r.addEventListener('change',()=>{S.set.engine=r.value;save()}));
   document.querySelectorAll('[name=art]').forEach(r=>r.addEventListener('change',()=>setArt(r.value)));
+  document.querySelectorAll('[name=scene]').forEach(r=>r.addEventListener('change',()=>setScene(r.value)));
   $('#setBench').addEventListener('change',e=>{S.set.bench=e.target.checked;save()});$('#setManual').addEventListener('change',e=>{S.set.manual=e.target.checked;save()});
   $('#pickBtn').addEventListener('click',()=>$('#file').click());
   $('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{pick=im;pickPrev.src=im.src;pickPrev.hidden=false;$('#nolens').hidden=true;say('Press the shutter.')};im.src=URL.createObjectURL(f)});
