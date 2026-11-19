@@ -726,7 +726,7 @@ const U=src=>{if(typeof src==='string')return src;let u=urls.get(src);if(!u){u=U
 
 /* ---------- save state ---------- */
 const LS='magicCamera.v1';
-const fresh=()=>({id:'r'+Date.now().toString(36),loaded:false,taken:0,ready:true,steps:0,dist:0,t0:Date.now(),pulled:false,note:'',intent:null});
+const fresh=()=>({id:'r'+Date.now().toString(36),loaded:false,taken:0,ready:false,steps:0,dist:0,t0:Date.now(),pulled:false,note:'',intent:null});
 let S=null;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 if(!S||S.v!==1)S={v:1,set:{engine:'auto',bench:false,manual:false},roll:fresh(),fix:null};
 if(S.set.engine!=='clock')S.set.engine='auto';if(!('user' in S))S.user=null;if(!('walk' in S))S.walk=null;S.pages=S.pages||[];S.fog=S.fog||[];if(S.darkNote==null)S.darkNote='';
@@ -834,8 +834,10 @@ function geoStart(){if(!navigator.geolocation)return;navigator.geolocation.watch
 
 /* ---------- winding ---------- */
 const windSecs=()=>S.set.bench?20:300, mountSecs=()=>S.set.bench?8:60;
-function charge(){const r=S.roll;if(r.ready)return 1;const w=windSecs();let c=Math.max(r.steps/(w*1.7),r.dist/(w*1.2));
-  if(S.set.bench||(!M.have&&!S.fix))c=Math.max(c,(Date.now()-r.t0)/1000/w);return clamp(c)}
+const FIRST_M=100;   /* the first plate winds after 100 m, so you can't step out and shoot straight away */
+function charge(){const r=S.roll;if(r.ready)return 1;const w=windSecs(),first=r.taken===0,k=first?FIRST_M/(w*1.2):1;let c=Math.max(r.steps/(w*1.7*k),r.dist/(w*1.2*k));
+  if(S.set.bench||(!M.have&&!S.fix))c=Math.max(c,(Date.now()-r.t0)/1000/(w*k));return clamp(c)}
+const firstLeft=()=>Math.max(5,Math.round((1-charge())*FIRST_M/5)*5);
 
 /* ---------- face plate ---------- */
 const needle=$('#needle'),strip=$('#strip');
@@ -848,18 +850,18 @@ function drawFace(c){const r=S.roll;
   if(Math.abs(c-lastC)>.004||c===1){lastC=c;needle.style.transform=`rotate(${-120+240*c}deg)`}
   needle.classList.toggle('full',r.ready&&r.taken<3);
   strip.style.transform=`translateY(${-42*r.taken}px)`;
-  $('#raise').hidden=!(r.taken<3&&r.ready&&!r.ended);const ct=$('#camTag');if(ct)ct.textContent=r.taken>=3?'the roll is full':r.ready?'':'walk to wind the next plate'}
+  $('#raise').hidden=!(r.taken<3&&r.ready&&!r.ended);const ct=$('#camTag');if(ct)ct.textContent=r.taken>=3?'the roll is full':r.ready?'':r.taken===0?'walk 100 m to wind the first plate':'walk to wind the next plate'}
 function tickFace(dt){const r=S.roll,c=r.ended?0:charge();
   if(!r.ended&&!r.ready&&r.taken<3){const n=Math.floor(c*5);if(n>lastNotch&&c<1)sfx.ratchet();lastNotch=n;
     if(c>=1){r.ready=true;save();sfx.hiss();say('A plate is wound.',6000)}}
   drawFace(c);
   if(!manual()&&panel===2){if(lowered())upArmed=true;
     if(raised()&&still()&&upArmed){raiseT+=dt;if(raiseT>.9){raiseT=0;upArmed=false;tryRaise()}}else raiseT=0}}
-function loadRoll(){if(S.roll.loaded)return;S.roll.loaded=true;S.roll.t0=Date.now();save();sfx.click();sfx.chime();say('A fresh roll. The first plate is yours.',6000)}
+function loadRoll(){if(S.roll.loaded)return;S.roll.loaded=true;S.roll.t0=Date.now();save();sfx.click();sfx.chime();say('A fresh roll. Walk 100 m to wind the first plate.',6000)}
 function tryRaise(){const r=S.roll;
   if(r.ended){sfx.dry();return say('The roll is sealed. Develop it when you are home.',5000)}
   if(r.taken>=3){sfx.dry();return say('The roll is full. End the walk when you are ready.',5000)}
-  if(!r.ready){sfx.dry();return say('Not wound yet. Keep walking.',5000)}
+  if(!r.ready){sfx.dry();return say(r.taken===0?`The first plate winds after 100 m of walking. About ${firstLeft()} m to go.`:'Not wound yet. Keep walking.',5000)}
   enterMount()}
 
 /* ---------- mounting and the shot ---------- */
@@ -1207,9 +1209,9 @@ function ritual(){const sc=$('#fscene'),c=$('#cans'),open=rStep===2||rStep===3,i
 function enterRitual(){if(S.walk){go('out');setPanel(1);return}S.roll=fresh();rStep=1;save();go('ritual');ritual();sfx.click()}
 function hatchTap(dir){if(rStep===1&&dir<=0){rStep=2;sfx.creak();ritual()}else if(rStep===3&&dir>=0){rStep=4;sfx.clunk();S.roll.loaded=true;S.roll.t0=Date.now();save();ritual();say('Loaded: '+S.roll.intent+'.',4000)}}
 /* stepping out */
-async function startWalk(){const r=S.roll;S.walk={id:r.id,intent:r.intent,t0:Date.now(),dist:0,route:[],home:null,wild:null,finds:[],homeSeen:false};S.walkLive=true;
+async function startWalk(){const r=S.roll;r.steps=0;r.dist=0;r.t0=Date.now();r.ready=false;S.walk={id:r.id,intent:r.intent,t0:Date.now(),dist:0,route:[],home:null,wild:null,finds:[],homeSeen:false};S.walkLive=true;
   if(S.fix&&Date.now()-S.fix.t<120000)onWalkFix(S.fix,null);save();setMode('north');
-  sfx.hiss();await door('The door opens. Cool air. The street.',1400);go('out');setPanel(1);loadNearby();say('The first plate is yours. Walk to wind the rest.',7000)}
+  sfx.hiss();await door('The door opens. Cool air. The street.',1400);go('out');setPanel(1);loadNearby();say('Walk 100 m and the first plate winds itself.',7000)}
 async function loadNearby(){nearby=known.filter(p=>p.lat!=null&&p.cr).map(p=>({lat:p.lat,lon:p.lon,label:p.cr.name+', a '+p.cr.kind}));
   if(!S.user)return;try{const r=await api({action:'list'},15000);(r.creatures||[]).forEach(c=>{if(c.lat!=null&&(!S.user||c.username!==S.user.username))nearby.push({lat:c.lat,lon:c.lon,label:(c.name||'a creature')+', found by '+c.username})})}catch(e){}}
 function onWalkFix(f,o){const w=S.walk;if(!w.home){w.home={lat:f.lat,lon:f.lon}}
@@ -1440,7 +1442,7 @@ function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked
   $('#logOut').hidden=true;$('#erase').textContent='Erase everything';$('#shop').hidden=false}
 function wire(){
   wireWalk();
-  $('#raise').addEventListener('click',tryRaise);$('#lensHot').addEventListener('click',()=>{if(!$('#raise').hidden)tryRaise();else{sfx.dry();say(S.roll.taken>=3?'The roll is full.':'Not wound yet. Keep walking.',3000)}});$('#lower').addEventListener('click',()=>fold(mstate==='mounting'?'Put away. No plate spent.':'Put away. The plate is still wound.'));
+  $('#raise').addEventListener('click',tryRaise);$('#lensHot').addEventListener('click',()=>{if(!$('#raise').hidden)tryRaise();else tryRaise()});$('#lower').addEventListener('click',()=>fold(mstate==='mounting'?'Put away. No plate spent.':'Put away. The plate is still wound.'));
   $('#prepNow').addEventListener('click',prepared);
   $('#cog').addEventListener('click',openShop);$('#shut').addEventListener('click',()=>{$('#shop').hidden=true});
   $('#toAlbum').addEventListener('click',enterAlbum);$('#backCam').addEventListener('click',enterStudy);

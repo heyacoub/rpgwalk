@@ -243,3 +243,7 @@ Research and proposal: Personal project doc `claude/walking-app/map-design.md` (
 ### 19 Nov: setup progress
 - **Yacoub (18 Nov, again 19 Nov):** setting up the camera must show progress with a clear start and end. Not a number, not "filling with light".
 - Built: a brass dial. During the 60 s setup, the needle climbs from COLD to READY, the copper arc fills behind it, and each tick mark gives a soft click. The ready lamp lights, holds a beat, and then the lens opens. The words under the needle change from "warming up" to "gears turning" to "lens settling" to "nearly there".
+
+### 19 Nov: first plate after 100 m
+- **Yacoub:** the first photo unlocks only after at least 100 m of walking, so you can't step out and shoot straight away.
+- Built: a fresh roll starts unwound, and the distance count starts when you step out. The winding gauge on the camera back fills over 100 m of walking (or about 140 steps). Tapping the viewfinder early tells you roughly how far is left. Later plates wind as before (about 360 m each).
