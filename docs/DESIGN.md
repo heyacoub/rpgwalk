@@ -232,3 +232,10 @@ Full decisions: Personal project docs `claude/walking-app/movement-rethink-spec.
 - **Coming home:** within 50 m of the lantern (after 150 m walked) the compass warms and turns home; hold to end → door closes → Study → summary card, saved as a journal page with the route and a play button.
 - **Server:** the vision model now also picks one of six elements (or takes the wild one); rarity adds a phrase to the painting prompt; `creatures.element` and `creatures.rarity` columns added.
 - Not yet: radar pings, turn-by-turn, native shell, Study/camera art pass, Yacoub's own sounds.
+
+## v0.5 — the adventure atlas (19 Nov 2026)
+Research and proposal: Personal project doc `claude/walking-app/map-design.md` (Hollow Knight's cartographer, Breath of the Wild's towers and three-state icons).
+- No map tiles: the minimap is drawn on a canvas from OpenStreetMap data (Overpass API), fetched in ~900 m squares and cached on the phone (IndexedDB `camera-atlas`).
+- Under the fog: parchment plus a faint pencil draft of the main streets. Where you've walked: inked streets, hatched buildings, painted parks and water, on a warm wash.
+- Landmarks: up to 6 per square from real places (parks, worship, fountains, viewpoints, art, history, towers, named cafés), with invented names ("the Amber Fountain"). They glow as "?" through the fog; within 30 m they're discovered: the fog bursts open (~60 m), chime, name inked, saved to the walk's journal page. Rewards are placeholders.
+- Compass rose and a brass frame on the map.

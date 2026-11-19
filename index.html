@@ -419,6 +419,12 @@ body[data-room=dark] #cap{color:#ffb9a6}
 .dexbig{width:150px;align-self:center}
 .pagecard .prints button{border:0;padding:0;background:none}
 .pagecard .card{width:100%}
+
+/* ---- the adventure atlas frame ---- */
+#mm{background:transparent}
+#mm.leaflet-container{background:transparent}
+#pMap::after{content:"";position:absolute;inset:0;z-index:550;pointer-events:none;box-shadow:inset 0 0 0 6px #5c3a1a,inset 0 0 0 9px #c9a24a,inset 0 0 50px rgba(70,40,10,.55)}
+.rose{position:absolute;z-index:560;left:calc(env(safe-area-inset-left,0px) + 18px);top:calc(env(safe-area-inset-top,0px) + 18px);width:64px;height:64px;pointer-events:none;opacity:.85}
 @media (prefers-reduced-motion:reduce){.goo i,.panel,.hatch2{animation:none;transition:none}}
 @media (prefers-reduced-motion:reduce){.hung,.cl.body,.breath,#needle.full,.dark.pullme .chain b{animation:none}}
 </style>
@@ -452,7 +458,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
 
 <section class="room" id="out">
   <div class="track" id="track">
-    <div class="panel" id="pMap"><div id="mm"></div><canvas id="fog"></canvas><button class="brass small" id="mmBack" hidden>Back to the Study</button></div>
+    <div class="panel" id="pMap"><div id="mm"></div><canvas id="fog"></canvas><svg class="rose" viewBox="-50 -50 100 100" aria-hidden="true"><circle r="30" fill="none" stroke="#3a2410" stroke-width="1.5"/><circle r="22" fill="none" stroke="#3a2410" stroke-width=".8"/><path d="M0-46 L7 0 L0 46 L-7 0Z" fill="#3a2410"/><path d="M-46 0 L0 7 L46 0 L0 -7Z" fill="#8a6a22"/><path d="M0-46 L7 0 L-7 0Z" fill="#8a2a1c"/><text y="-36" x="-5" font-size="0" fill="#3a2410">N</text><text x="0" y="-40" text-anchor="middle" font-family="IM Fell English SC,serif" font-size="11" fill="#2a1b10" dy="-2">N</text></svg><button class="brass small" id="mmBack" hidden>Back to the Study</button></div>
     <div class="panel leather" id="pCompass">
       <div class="instr">
         <div class="stats"><div><span>time out</span><b id="tOut">0:00</b></div><div><span>distance</span><b id="dOut">0.00 km</b></div></div>
@@ -576,6 +582,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
       <li>Walk intentions (Patience, Grace, Ease, Healing, Newness, Compassion) come from <a href="https://www.doyouyoga.com/5-ways-to-set-powerful-home-practice-intentions/" target="_blank" rel="noopener">DoYouYoga's guide to setting practice intentions</a>.</li>
       <li>Wild creatures are nudged onto the nearest street with the <a href="https://project-osrm.org" target="_blank" rel="noopener">Project OSRM</a> demo server (BSD-2), using OpenStreetMap data.</li>
       <li>Study, door, window, map, camera, journal, compass and parchment art: generated with FLUX.1 [dev] by Black Forest Labs, through Hugging Face Inference Providers.</li>
+      <li>The adventure map is drawn from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> data, fetched through the <a href="https://overpass-api.de" target="_blank" rel="noopener">Overpass API</a>. Landmark names are invented from what each place is.</li>
       <li>Street names for creature homes: <a href="https://nominatim.org" target="_blank" rel="noopener">Nominatim</a>, OpenStreetMap data.</li>
       <li>Every sound is synthesised in the browser. The camera, gauge, darkroom and clockwork creatures are drawn in code.</li>
     </ul>
@@ -1097,6 +1104,7 @@ function onWalkFix(f,o){const w=S.walk;if(!w.home){w.home={lat:f.lat,lon:f.lon}}
   if(w.route.length>2000)w.route=w.route.filter((_,i)=>i%2===0);
   if(o&&hav(o,f)<120){const n=Math.ceil(hav(o,f)/8);for(let i=1;i<=n;i++)uncover(o.lat+(f.lat-o.lat)*i/n,o.lon+(f.lon-o.lon)*i/n)}else uncover(f.lat,f.lon);
   if(!w.wild)spawnWild(w.home);
+  loadCell(Math.floor(f.lat/ACELL),Math.floor(f.lon/ACELL));checkLandmarks(f);
   const dh=hav(f,w.home);if(!w.homeSeen&&w.dist>(S.set.bench?30:150)&&dh<=50){w.homeSeen=true;sfx.chime();setMode('home');$('#bigRose').classList.add('warm');say('The lantern’s glow. Home is close. Hold to end the walk.',10000)}
   if(room==='out'&&panel===0)drawFog()}
 function uncover(lat,lon){const i=Math.round(lat/CELL),j=Math.round(lon/(CELL/Math.cos(lat*Math.PI/180))),k=i+','+j;if(!FOG.has(k)){FOG.add(k);S.fog.push(k)}}
@@ -1114,27 +1122,113 @@ function setPanel(i){panel=clamp(i,0,2);['#pMap','#pCompass','#pCam'].forEach((i
   document.querySelectorAll('#tabs3 button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.i===panel));
   const walking=!!S.walk;$('#tabs3').hidden=!walking;$('#miniCam').hidden=!walking||panel===2;$('#mmBack').hidden=walking;
   if(panel===0)showMap();if(panel!==0)follow=true}
-async function showMap(){try{await leaflet()}catch(e){return say('The map could not load.',4000)}
-  if(!mmap){mmap=L.map('mm',{zoomControl:false,attributionControl:true});L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(mmap);
-    mmap.on('move zoom resize',drawFog);mmap.on('dragstart',()=>follow=false)}
-  const c=S.fix||(S.walk&&S.walk.home);mmap.invalidateSize();
-  if(c&&(follow||!mmap._loaded))mmap.setView([c.lat,c.lon],mmap._loaded?mmap.getZoom():18);else if(!mmap._loaded)mmap.setView([30.0444,31.2357],13);drawFog()}
 let grainC=null;function grain(){if(grainC)return grainC;grainC=el('canvas');grainC.width=grainC.height=128;const g=grainC.getContext('2d'),d=g.createImageData(128,128);   /* paper grain, drawn once */
   for(let i=0;i<d.data.length;i+=4){const v=Math.random()*40;d.data[i]=120;d.data[i+1]=90;d.data[i+2]=40;d.data[i+3]=v}g.putImageData(d,0,0);return grainC}
-function drawFog(){if(!mmap||!mmap._loaded)return;const cv=$('#fog'),r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1);
-  if(cv.width!==Math.round(r.width*dpr)){cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr)}
-  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.globalCompositeOperation='source-over';x.clearRect(0,0,r.width,r.height);
-  x.globalAlpha=.93;const g=x.createRadialGradient(r.width/2,r.height/2,r.height*.1,r.width/2,r.height/2,r.height*.75);g.addColorStop(0,'#eee2c0');g.addColorStop(1,'#cdb27a');x.fillStyle=g;x.fillRect(0,0,r.width,r.height);x.fillStyle=x.createPattern(grain(),'repeat');x.fillRect(0,0,r.width,r.height);x.globalAlpha=1;
-  const ctr=mmap.getCenter(),mpp=40075016.686*Math.cos(ctr.lat*Math.PI/180)/Math.pow(2,mmap.getZoom()+8),rad=Math.max(24,18/mpp),b=mmap.getBounds().pad(.1);
-  x.globalCompositeOperation='destination-out';
-  FOG.forEach(k=>{const[i,j]=k.split(',').map(Number),lat=i*CELL,lon=j*CELL/Math.cos(lat*Math.PI/180);if(!b.contains([lat,lon]))return;
-    const pt=mmap.latLngToContainerPoint([lat,lon]),gr=x.createRadialGradient(pt.x,pt.y,rad*.35,pt.x,pt.y,rad);gr.addColorStop(0,'rgba(0,0,0,1)');gr.addColorStop(1,'rgba(0,0,0,0)');
-    x.fillStyle=gr;x.beginPath();x.arc(pt.x,pt.y,rad,0,7);x.fill()});
-  x.globalCompositeOperation='source-over';const w=S.walk;
-  if(w&&w.home){const h=mmap.latLngToContainerPoint([w.home.lat,w.home.lon]);x.fillStyle='rgba(255,190,70,.35)';x.beginPath();x.arc(h.x,h.y,18,0,7);x.fill();x.fillStyle='#b46f12';x.beginPath();x.arc(h.x,h.y,6,0,7);x.fill();x.font='13px "IM Fell English SC",serif';x.fillStyle='#2a1b10';x.fillText('home',h.x+9,h.y+4)}
-  if(w&&w.wild)w.wild.forEach(c=>{if(c.claimed)return;const p=mmap.latLngToContainerPoint([c.lat,c.lon]);x.save();x.translate(p.x,p.y);x.rotate(Math.PI/4);x.fillStyle=ELCOL[c.el];x.strokeStyle='#2a1b10';x.lineWidth=2;
-    const sz=c.rar==='legendary'?11:c.rar==='rare'?9:7;x.fillRect(-sz,-sz,sz*2,sz*2);x.strokeRect(-sz,-sz,sz*2,sz*2);x.restore();x.fillStyle='#2a1b10';x.font='12px "Special Elite",monospace';x.fillText(c.rar+' '+c.el,p.x+12,p.y+4)});
-  if(S.fix&&w){const p=mmap.latLngToContainerPoint([S.fix.lat,S.fix.lon]);x.fillStyle='#fff';x.beginPath();x.arc(p.x,p.y,9,0,7);x.fill();x.fillStyle='#3f8f78';x.beginPath();x.arc(p.x,p.y,6,0,7);x.fill()}}
+/* ---------- the adventure atlas: our own map, drawn from OpenStreetMap data ---------- */
+const ATLAS={cells:new Map(),loading:new Set(),failed:0},ACELL=.008;   /* data comes in ~900 m squares */
+const LMK=S.lmk||(S.lmk={});   /* discovered landmarks: id -> {name, t} */
+let adb=null;function atlasDB(){if(adb)return adb;adb=new Promise(res=>{const r=indexedDB.open('camera-atlas',1);r.onupgradeneeded=()=>r.result.createObjectStore('cells');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)});return adb}
+async function cellGet(k){const d=await atlasDB();if(!d)return null;return new Promise(r=>{const q=d.transaction('cells').objectStore('cells').get(k);q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null)})}
+async function cellPut(k,v){const d=await atlasDB();if(!d)return;try{d.transaction('cells','readwrite').objectStore('cells').put(v,k)}catch(e){}}
+const LNAME={park:['Grove','Glade','Garden','Green'],worship:['Spire','Sanctum','Bell Tower','Dome'],fountain:['Spring','Wishing Well','Fountain'],view:['Lookout','Watch'],
+  ruin:['Ruins','Old Stones','Relic'],art:['Statue','Effigy','Monument'],tower:['Tower','Beacon'],museum:['Archive','Hall of Curios'],cafe:['Tavern','Inn','Hearth'],library:['Library','Scriptorium'],water:['Pool','Mere']};
+const LADJ=['Whispering','Old','Amber','Moonlit','Hollow','Gilded','Sleeping','Lantern','Mossy','Wandering','Hidden','Copper','Silver','Quiet','Ember','Starlit'];
+const rnd=n=>{let x=Math.sin(n*9301+49297)*233280;return x-Math.floor(x)};
+function lmName(id,type){const a=LADJ[Math.floor(rnd(id)*LADJ.length)],b=(LNAME[type]||['Wonder'])[Math.floor(rnd(id+7)*(LNAME[type]||[1]).length)];return'the '+a+' '+b}
+function lmType(t){if(t.amenity==='place_of_worship')return'worship';if(t.amenity==='fountain')return'fountain';if(t.amenity==='cafe')return'cafe';if(t.amenity==='library')return'library';
+  if(t.tourism==='viewpoint')return'view';if(t.tourism==='artwork'||t.tourism==='attraction'&&t.historic==null)return'art';if(t.tourism==='museum')return'museum';if(t.historic)return'ruin';
+  if(t.man_made)return'tower';if(t.leisure==='park'||t.leisure==='garden')return'park';if(t.natural==='water')return'water';return null}
+function packCell(j){const f={roads:[],bld:[],green:[],water:[],lines:[],lm:[]},P=g=>g.map(p=>[+p.lat.toFixed(5),+p.lon.toFixed(5)]);
+  (j.elements||[]).forEach(e=>{const t=e.tags||{},g=e.geometry;let ty=lmType(t);
+    if(ty&&(e.type==='node'||g)&&(ty!=='cafe'||t.name)){let la=e.lat,lo=e.lon;if(g&&g.length){la=g.reduce((s,p)=>s+p.lat,0)/g.length;lo=g.reduce((s,p)=>s+p.lon,0)/g.length}
+      if(la!=null&&(ty!=='park'||t.name||(g&&g.length>8))&&(ty!=='water'||t.name))f.lm.push({id:e.id,ty,la:+la.toFixed(5),lo:+lo.toFixed(5),real:t.name||''})}
+    if(!g||g.length<2)return;
+    if(t.highway){const c=/motorway|trunk|primary/.test(t.highway)?3:/secondary|tertiary/.test(t.highway)?2:/footway|path|pedestrian|steps|cycleway|track/.test(t.highway)?0:1;f.roads.push([c,P(g)])}
+    else if(t.building)f.bld.push(P(g));
+    else if(t.natural==='water'||t.waterway==='riverbank'||t.landuse==='reservoir')f.water.push(P(g));
+    else if(t.waterway)f.lines.push(P(g));
+    else if(t.leisure||t.landuse||t.natural)f.green.push(P(g))});
+  /* keep landmarks a treat, not a crowd: at most 6 per square, named ones first */
+  f.lm.sort((a,b)=>(b.real?1:0)-(a.real?1:0)||rnd(a.id)-rnd(b.id));f.lm=f.lm.slice(0,6).map(l=>({...l,name:lmName(l.id,l.ty)}));return f}
+async function loadCell(i,j){const k=i+','+j;if(ATLAS.cells.has(k)||ATLAS.loading.has(k))return;ATLAS.loading.add(k);
+  let c=await cellGet(k);
+  if(!c){const s=i*ACELL,w=j*ACELL,n=s+ACELL,e=w+ACELL,bb=`(${s},${w},${n},${e})`;
+    const q=`[out:json][timeout:25];(way["highway"]${bb};way["building"]${bb};way["leisure"]${bb};way["landuse"~"grass|forest|recreation_ground|cemetery|meadow|village_green|reservoir"]${bb};way["natural"~"water|wood|scrub"]${bb};way["waterway"]${bb};nw["amenity"~"place_of_worship|fountain|cafe|library"]${bb};nw["tourism"~"viewpoint|attraction|artwork|museum"]${bb};nw["historic"]${bb};nw["man_made"~"tower|lighthouse|water_tower"]${bb};);out tags geom qt;`;
+    try{const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}});
+      if(!r.ok)throw new Error('overpass '+r.status);c=packCell(await r.json());cellPut(k,c)}
+    catch(e){ATLAS.loading.delete(k);ATLAS.failed++;if(ATLAS.failed===1)say('The cartographer could not reach the archive. Your trail is still being drawn.',6000);return}}
+  ATLAS.cells.set(k,c);ATLAS.loading.delete(k);drawFog()}
+function needCells(){if(!mmap||!mmap._loaded)return;const b=mmap.getBounds();if(mmap.getZoom()<14)return;
+  for(let i=Math.floor(b.getSouth()/ACELL);i<=Math.floor(b.getNorth()/ACELL);i++)for(let j=Math.floor(b.getWest()/ACELL);j<=Math.floor(b.getEast()/ACELL);j++)loadCell(i,j)}
+function landmarks(){const out=[];ATLAS.cells.forEach(c=>c.lm.forEach(l=>out.push(l)));return out}
+function checkLandmarks(f){landmarks().forEach(l=>{if(LMK[l.id])return;if(hav(f,{lat:l.la,lon:l.lo})>30)return;
+  LMK[l.id]={name:l.name,t:Date.now(),ty:l.ty};if(S.walk){S.walk.landmarks=S.walk.landmarks||[];S.walk.landmarks.push(l.name)}
+  for(let a=0;a<360;a+=20)for(const d of[15,30,45,60]){const p=dest({lat:l.la,lon:l.lo},a,d);uncover(p.lat,p.lon)}   /* the fog bursts open */
+  save();sfx.chime();setTimeout(()=>sfx.bell(),500);say(`Discovered: ${l.name}${l.real?' ('+l.real+')':''}. Something here is waiting to be claimed… (rewards are coming soon)`,9000)})}
+/* projection: our own Web Mercator so thousands of points stay fast */
+function proj(z){const ws=256*Math.pow(2,z),pb=mmap.getPixelBounds().min;return(la,lo)=>{const s=Math.sin(la*Math.PI/180);return[(lo+180)/360*ws-pb.x,(.5-Math.log((1+s)/(1-s))/(4*Math.PI))*ws-pb.y]}}
+let hatchP=null;function hatch(x){if(hatchP)return hatchP;const c=el('canvas');c.width=c.height=8;const g=c.getContext('2d');g.fillStyle='rgba(214,190,140,.9)';g.fillRect(0,0,8,8);g.strokeStyle='rgba(90,60,30,.45)';g.lineWidth=1;g.beginPath();g.moveTo(0,8);g.lineTo(8,0);g.stroke();hatchP=x.createPattern(c,'repeat');return hatchP}
+const offA=el('canvas'),offM=el('canvas');let rafF=0;
+function drawFog(){if(rafF)return;rafF=requestAnimationFrame(()=>{rafF=0;paintAtlas()})}
+function paintAtlas(){if(!mmap||!mmap._loaded)return;const cv=$('#fog'),r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1),W=Math.round(r.width*dpr),H=Math.round(r.height*dpr);
+  [cv,offA,offM].forEach(c=>{if(c.width!==W){c.width=W;c.height=H}});
+  const x=cv.getContext('2d'),a=offA.getContext('2d'),m=offM.getContext('2d'),z=mmap.getZoom(),P=proj(z),k=Math.pow(2,z-17);
+  [x,a,m].forEach(g=>{g.setTransform(dpr,0,0,dpr,0,0);g.globalCompositeOperation='source-over';g.globalAlpha=1;g.clearRect(0,0,r.width,r.height)});
+  /* 1. the parchment */
+  const pg=x.createRadialGradient(r.width/2,r.height/2,r.height*.1,r.width/2,r.height/2,r.height*.8);pg.addColorStop(0,'#f1e6c6');pg.addColorStop(1,'#c9ab72');x.fillStyle=pg;x.fillRect(0,0,r.width,r.height);
+  x.globalAlpha=.6;x.fillStyle=x.createPattern(grain(),'repeat');x.fillRect(0,0,r.width,r.height);x.globalAlpha=1;
+  const line=(g,pts)=>{g.beginPath();pts.forEach(([la,lo],i)=>{const[X,Y]=P(la,lo);i?g.lineTo(X,Y):g.moveTo(X,Y)})},bview=mmap.getBounds().pad(.2);
+  const cells=[...ATLAS.cells.values()];
+  /* 2. the cartographer's pencil draft, under the fog */
+  x.strokeStyle='rgba(80,58,30,.22)';x.lineWidth=1.2;x.lineCap=x.lineJoin='round';cells.forEach(c=>c.roads.forEach(([cl,p])=>{if(cl>0){line(x,p);x.stroke()}}));
+  /* 3. the inked, painted map, only where you have walked */
+  a.lineCap=a.lineJoin='round';
+  cells.forEach(c=>{a.fillStyle='rgba(126,170,96,.55)';c.green.forEach(p=>{line(a,p);a.fill()});
+    a.fillStyle='rgba(110,160,190,.6)';a.strokeStyle='rgba(40,80,110,.6)';a.lineWidth=1.2;c.water.forEach(p=>{line(a,p);a.fill();a.stroke()});
+    a.strokeStyle='rgba(70,120,160,.7)';a.lineWidth=3*k+1;c.lines.forEach(p=>{line(a,p);a.stroke()})});
+  if(z>=16)cells.forEach(c=>{a.fillStyle=hatch(a);a.strokeStyle='rgba(70,45,22,.8)';a.lineWidth=.9;c.bld.forEach(p=>{line(a,p);a.closePath();a.fill();a.stroke()})});
+  const RW=[1.2,3,4.5,6];
+  cells.forEach(c=>{c.roads.forEach(([cl,p])=>{line(a,p);if(cl===0){a.setLineDash([3,3]);a.strokeStyle='rgba(80,50,25,.8)';a.lineWidth=1.3;a.stroke();a.setLineDash([])}
+      else{a.strokeStyle='#3a2410';a.lineWidth=RW[cl]*k+2.2;a.stroke()}})});
+  cells.forEach(c=>c.roads.forEach(([cl,p])=>{if(cl>0){line(a,p);a.strokeStyle='#f5ead0';a.lineWidth=RW[cl]*k;a.stroke()}}));
+  /* the walked mask: soft watercolour blooms */
+  const ctr=mmap.getCenter(),mpp=40075016.686*Math.cos(ctr.lat*Math.PI/180)/Math.pow(2,z+8),rad=Math.max(24,18/mpp);
+  FOG.forEach(key=>{const[i,j]=key.split(',').map(Number),la=i*CELL,lo=j*CELL/Math.cos(la*Math.PI/180);if(!bview.contains([la,lo]))return;const[X,Y]=P(la,lo);
+    const g=m.createRadialGradient(X,Y,rad*.35,X,Y,rad);g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(1,'rgba(0,0,0,0)');m.fillStyle=g;m.beginPath();m.arc(X,Y,rad,0,7);m.fill()});
+  a.setTransform(1,0,0,1,0,0);a.globalCompositeOperation='destination-in';a.drawImage(offM,0,0);
+  /* a warm wash where the fog lifted, then the ink on top */
+  m.setTransform(1,0,0,1,0,0);m.globalCompositeOperation='source-in';m.fillStyle='rgba(250,238,205,.85)';m.fillRect(0,0,W,H);
+  x.setTransform(1,0,0,1,0,0);x.drawImage(offM,0,0);x.drawImage(offA,0,0);x.setTransform(dpr,0,0,dpr,0,0);
+  const w=S.walk,t=performance.now()/1000;
+  /* 4. landmarks: glowing riddles in the fog, named once found */
+  landmarks().forEach(l=>{if(!bview.contains([l.la,l.lo]))return;const[X,Y]=P(l.la,l.lo),found=LMK[l.id];
+    if(!found){const pulse=.55+.45*Math.sin(t*2+l.id%7);const g=x.createRadialGradient(X,Y,2,X,Y,26);g.addColorStop(0,`rgba(255,214,110,${.75*pulse})`);g.addColorStop(1,'rgba(255,190,70,0)');x.fillStyle=g;x.beginPath();x.arc(X,Y,26,0,7);x.fill()}
+    x.fillStyle=found?'#f5ead0':'rgba(40,24,10,.85)';x.strokeStyle=found?'#3a2410':'#ffd36b';x.lineWidth=2;x.beginPath();x.arc(X,Y,11,0,7);x.fill();x.stroke();
+    glyph(x,l.ty,X,Y,found?'#3a2410':'#ffd36b',found);
+    if(found){x.font='14px "IM Fell English SC",Georgia,serif';x.textAlign='center';x.lineWidth=4;x.strokeStyle='rgba(245,234,208,.9)';const n=found.name.replace(/^the /,'');x.strokeText(n,X,Y+26);x.fillStyle='#2a1b10';x.fillText(n,X,Y+26);x.textAlign='start'}});
+  /* 5. home, wild creatures, you */
+  if(w&&w.home){const[hx,hy]=P(w.home.lat,w.home.lon);x.fillStyle='rgba(255,190,70,.35)';x.beginPath();x.arc(hx,hy,18,0,7);x.fill();x.fillStyle='#b46f12';x.beginPath();x.arc(hx,hy,6,0,7);x.fill();
+    x.font='13px "IM Fell English SC",serif';x.fillStyle='#2a1b10';x.fillText('home',hx+9,hy+4)}
+  if(w&&w.wild)w.wild.forEach(c=>{if(c.claimed)return;const[X,Y]=P(c.lat,c.lon);x.save();x.translate(X,Y);x.rotate(Math.PI/4);x.fillStyle=ELCOL[c.el];x.strokeStyle='#2a1b10';x.lineWidth=2;
+    const sz=c.rar==='legendary'?11:c.rar==='rare'?9:7;x.fillRect(-sz,-sz,sz*2,sz*2);x.strokeRect(-sz,-sz,sz*2,sz*2);x.restore();x.fillStyle='#2a1b10';x.font='12px "Special Elite",monospace';x.fillText(c.rar+' '+c.el,X+12,Y+4)});
+  if(S.fix){const[X,Y]=P(S.fix.lat,S.fix.lon);x.fillStyle='#fff';x.beginPath();x.arc(X,Y,9,0,7);x.fill();x.fillStyle='#3f8f78';x.beginPath();x.arc(X,Y,6,0,7);x.fill()}
+  if(!ATLAS.cells.size){x.font='italic 16px "IM Fell English",Georgia,serif';x.fillStyle='rgba(60,40,20,.7)';x.textAlign='center';x.fillText(ATLAS.loading.size?'The cartographer is sketching…':'',r.width/2,r.height*.18);x.textAlign='start'}}
+function glyph(x,ty,X,Y,col,found){x.save();x.strokeStyle=col;x.fillStyle=col;x.lineWidth=1.6;x.translate(X,Y);
+  if(!found){x.font='bold 13px Georgia,serif';x.textAlign='center';x.textBaseline='middle';x.fillText('?',0,1);x.restore();return}
+  x.beginPath();
+  if(ty==='park'){x.arc(0,-2,4.5,0,7);x.fill();x.fillRect(-1,2,2,5)}
+  else if(ty==='worship'||ty==='tower'){x.moveTo(0,-7);x.lineTo(4,-1);x.lineTo(4,6);x.lineTo(-4,6);x.lineTo(-4,-1);x.closePath();x.fill()}
+  else if(ty==='fountain'||ty==='water'){x.arc(0,2,5,0,Math.PI);x.stroke();x.beginPath();x.moveTo(0,1);x.lineTo(0,-6);x.stroke();x.beginPath();x.arc(-3,-4,1.5,0,7);x.arc(3,-4,1.5,0,7);x.fill()}
+  else if(ty==='cafe'){x.rect(-4,-3,7,7);x.stroke();x.beginPath();x.arc(4,0,2,-Math.PI/2,Math.PI/2);x.stroke()}
+  else{for(let i=0;i<5;i++){const an=-Math.PI/2+i*Math.PI*2/5,an2=an+Math.PI/5;x.lineTo(Math.cos(an)*7,Math.sin(an)*7);x.lineTo(Math.cos(an2)*3,Math.sin(an2)*3)}x.closePath();x.fill()}
+  x.restore()}
+let atlasIv=0;
+async function showMap(){try{await leaflet()}catch(e){return say('The map could not load.',4000)}
+  if(!mmap){mmap=L.map('mm',{zoomControl:false,attributionControl:true,minZoom:14,maxZoom:19});mmap.attributionControl.setPrefix(false);mmap.attributionControl.addAttribution('Map data © OpenStreetMap contributors');
+    mmap.on('move zoom resize',drawFog);mmap.on('moveend',needCells);mmap.on('dragstart',()=>follow=false)}
+  const c=S.fix||(S.walk&&S.walk.home);mmap.invalidateSize();
+  if(c&&(follow||!mmap._loaded))mmap.setView([c.lat,c.lon],mmap._loaded?mmap.getZoom():17);else if(!mmap._loaded)mmap.setView([30.0444,31.2357],15);
+  needCells();drawFog();clearInterval(atlasIv);atlasIv=setInterval(()=>{if(room==='out'&&panel===0)drawFog();else clearInterval(atlasIv)},120)}
 /* the compass */
 let cmode='north',cT=0,lastFollow=0;
 function setMode(m){cmode=m;document.querySelectorAll('#modes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m))}
@@ -1149,7 +1243,7 @@ function tickCompass(dt){if(!S.walk)return;cT+=dt;if(cT<.2)return;cT=0;const w=S
   if(panel===0&&follow&&mmap&&S.fix&&Date.now()-lastFollow>3000){lastFollow=Date.now();mmap.panTo([S.fix.lat,S.fix.lon],{animate:true})}}
 /* coming home */
 async function endWalk(){const w=S.walk;if(!w)return;camStop();fork.off();S.roll.ended=true;S.roll.ready=false;
-  const page={id:w.id,n:S.pages.length+1,intent:w.intent,t0:w.t0,t1:Date.now(),dist:w.dist,route:w.route.filter((_,i,a)=>a.length<400||i%Math.ceil(a.length/400)===0).map(p=>[p[0],p[1]]),finds:w.finds,plates:S.roll.taken,fog:w.route.length};
+  const page={id:w.id,n:S.pages.length+1,intent:w.intent,t0:w.t0,t1:Date.now(),dist:w.dist,route:w.route.filter((_,i,a)=>a.length<400||i%Math.ceil(a.length/400)===0).map(p=>[p[0],p[1]]),finds:w.finds,landmarks:w.landmarks||[],plates:S.roll.taken,fog:w.route.length};
   S.pages.unshift(page);S.walk=null;save();sfx.click();sfx.fold();
   await door('The door closes behind you. The street goes quiet. The lamp hums, the clock ticks. Home.',2600);
   hum.on();setTimeout(()=>hum.off(),5000);await enterStudy();sfx.chime();showPage(page,true)}
@@ -1159,6 +1253,7 @@ function pageCard(p,isNew){const c=el('div','pagecard'),d=new Date(p.t0);
     <span class="lbl">intention</span><span class="hand">${esc(p.intent||'—')}</span>
     <span class="lbl">plates</span><span>${p.plates} of 3</span>
     <span class="lbl">wild creatures found</span><span>${p.finds.length?p.finds.map(f=>esc(f.rar+' '+f.el)).join(', ')+'. Develop them in the darkroom to meet them.':'None this time.'}</span>
+    ${p.landmarks&&p.landmarks.length?`<span class="lbl">landmarks discovered</span><span>${p.landmarks.map(esc).join(', ')}</span>`:''}
     <span class="lbl">route</span>`;
   const cv=el('canvas');cv.width=600;cv.height=380;cv.setAttribute('aria-label','The route of this walk');c.append(cv);
   const draw=k=>{const x=cv.getContext('2d'),r=p.route;x.clearRect(0,0,600,380);if(r.length<2){x.font='22px Caveat,cursive';x.fillStyle='#6f5119';x.fillText('Not enough of a route was recorded.',30,190);return}
