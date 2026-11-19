@@ -982,15 +982,16 @@ function renderDev(){if(!dk.cur)return;const p=dk.p,pr=dk.cur.pr,ph=pr.querySele
   ph.style.opacity=smooth(p,.06,.6);ph.style.filter=`grayscale(1) contrast(${lerp(.3,1.06,q).toFixed(3)}) brightness(${lerp(2.6,1,q).toFixed(3)})`;
   pr.querySelectorAll('.cl').forEach(l=>{l.style.opacity=l.classList.contains('eyes')?smooth(p,.84,.92):l.classList.contains('body')&&!l.classList.contains('feather')?smooth(p,.91,1):smooth(p,.86,1)})}
 function tickDark(dt){let g;if(M.have&&!S.set.manual)g=clamp(M.gamma,-40,40);else{g=dk.drag;if(!dk.held)dk.drag*=Math.pow(.02,dt)}
-  const vel=(g-dk.lastG)/Math.max(dt,.001);dk.lastG=g;dk.energy=dk.energy*.9+Math.min(1,Math.abs(vel)/50)*.1;
+  const vel=(g-dk.lastG)/Math.max(dt,.001);dk.lastG=g;const shake=M.have&&!S.set.manual?Math.min(1,M.rot/180):0;   /* tilting or shaking both count */
+  dk.energy=dk.energy*.9+Math.max(Math.min(1,Math.abs(vel)/50),shake)*.1;
   darkEl.style.setProperty('--sway',(-g*.32).toFixed(2)+'deg');darkEl.style.setProperty('--sx',(g*2.2).toFixed(1)+'px');
   darkEl.style.setProperty('--tilt',(g*.11).toFixed(2));darkEl.style.setProperty('--slosh',(g/40).toFixed(3));
   slosh.set((n,t)=>{n.g.gain.setTargetAtTime(dk.stage==='dev'?dk.energy*.16:0,t,.12);n.f.frequency.setTargetAtTime(450+dk.energy*900,t,.1)});
   if(dk.stage!=='dev')return;
-  let np=dk.p+(.14+dk.energy*.7)*dt;
+  let np=dk.p+(.22+dk.energy*.9)*dt;   /* it develops on its own; rocking only hurries it */
   if(np>.84&&!dk.cr){np=Math.max(dk.p,Math.min(np,.84));dk.stall+=dt;       /* the photo is up; wait for whoever is hiding in it */
-    if(dk.stall>4&&!dk.told){dk.told=true;say('Something is taking shape. Keep rocking.')}
-    if(dk.stall>150){dk.stall=-1e9;say('The spirit is slow tonight. Keep rocking.')}}
+    if(dk.stall>2&&!dk.told){dk.told=true;say('The photo is up. Something is taking shape in it. You can stop rocking, it will finish on its own.',12000)}
+    if(dk.stall>150){dk.stall=-1e9;say('The spirit is slow tonight. It is still coming.')}}
   dk.p=Math.min(1,np);renderDev();if(dk.p>=1)developed()}
 async function developed(){dk.stage='done';const{pl,pr}=dk.cur,cr=dk.cr;pl.final=cr.final;pl.synced=cr.synced;pl.cr={...cr,final:undefined};pl.dev=true;pl.note=S.darkNote;await DB.put(pl);
   pr.classList.remove('dev');pr.querySelector('.photo').style.filter='';pr.querySelectorAll('.cl').forEach(l=>l.style.opacity='');
@@ -1161,6 +1162,7 @@ function showPage(p,isNew){const sh=$('#sum');sh.innerHTML='';const{c,bt}=pageCa
 function enterJournal(){const l=$('#jList');l.innerHTML='';if(!S.pages.length)l.innerHTML='<p style="text-align:center;font-style:italic">No walks yet. Pages appear here after each one.</p>';
   S.pages.forEach(p=>{const b=el('button','jrow');b.innerHTML=`<span><b>Walk ${p.n}</b> · ${esc(p.intent||'—')}</span><span>${fmtD(p.dist)}${p.finds.length?' · '+p.finds.length+' found':''}</span>`;b.addEventListener('click',()=>showPage(p,false));l.append(b)});go('journal')}
 function wireWalk(){
+  document.addEventListener('click',askMotion,{once:true,capture:true});document.addEventListener('touchend',askMotion,{once:true,capture:true});
   $('#deskCam').addEventListener('click',()=>{askMotion();enterRitual()});$('#deskBook').addEventListener('click',enterJournal);$('#jBack').addEventListener('click',enterStudy);
   $('#darkDoor').addEventListener('click',()=>{sfx.click();enterDark()});
   $('#leaveDark').addEventListener('click',()=>{sfx.fold();hum.off();slosh.off();dk.stage='off';dk.cur=null;dk.cr=null;   /* anything not yet lifted out stays a waiting plate */
