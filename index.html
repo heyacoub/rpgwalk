@@ -1115,7 +1115,7 @@ function setPanel(i){panel=clamp(i,0,2);['#pMap','#pCompass','#pCam'].forEach((i
   const walking=!!S.walk;$('#tabs3').hidden=!walking;$('#miniCam').hidden=!walking||panel===2;$('#mmBack').hidden=walking;
   if(panel===0)showMap();if(panel!==0)follow=true}
 async function showMap(){try{await leaflet()}catch(e){return say('The map could not load.',4000)}
-  if(!mmap){mmap=L.map('mm',{zoomControl:false,attributionControl:true});L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:20,subdomains:'abcd',attribution:'© OpenStreetMap contributors © CARTO'}).addTo(mmap);
+  if(!mmap){mmap=L.map('mm',{zoomControl:false,attributionControl:true});L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(mmap);
     mmap.on('move zoom resize',drawFog);mmap.on('dragstart',()=>follow=false)}
   const c=S.fix||(S.walk&&S.walk.home);mmap.invalidateSize();
   if(c&&(follow||!mmap._loaded))mmap.setView([c.lat,c.lon],mmap._loaded?mmap.getZoom():18);else if(!mmap._loaded)mmap.setView([30.0444,31.2357],13);drawFog()}
