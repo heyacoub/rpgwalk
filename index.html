@@ -466,6 +466,30 @@ body[data-room=dark] #cap{color:#ffb9a6}
 .lever[hidden]{display:none!important}
 @keyframes leverglow{0%,100%{box-shadow:0 0 0 2px rgba(255,214,140,.35),0 0 12px rgba(255,190,90,.3)}50%{box-shadow:0 0 0 2px rgba(255,214,140,.7),0 0 26px rgba(255,190,90,.6)}}
 .ctag{position:absolute;left:0;right:0;top:80.5%;margin:0;text-align:center;font:italic 15px var(--body);color:var(--parch);text-shadow:0 1px 3px #000}
+
+/* ---- loading the film: one painted workbench ---- */
+#ritual{padding:0;justify-content:center;background:radial-gradient(#3a2414,#0d0704)}
+.fscene{position:relative;height:min(100%,calc(100vw * 1344 / 768));aspect-ratio:768/1344;max-width:100%}
+.fs-layer{position:absolute;inset:0;background:center/100% 100% no-repeat;transition:opacity .6s}
+.fs-open{background-image:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/film-open-a.png)}
+.fs-closed{background-image:url(https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/film-closed-b.png)}
+.fscene.open .fs-closed{opacity:0}
+.fscene .rt{position:absolute;left:0;right:0;top:.5%;margin:0;text-align:center;font:400 clamp(17px,5vw,22px) var(--disp);color:var(--brass-hi);text-shadow:0 2px 6px #000}
+.camhot{position:absolute;left:7.7%;top:4.4%;width:82%;height:51%;border:0;background:none;border-radius:20px;touch-action:none}
+.camhot:focus-visible{outline:2px solid var(--brass-hi)}
+.fscene .slotc{position:absolute;left:44.8%;top:29.5%;width:13%;height:11%;border:0;border-radius:10px;opacity:0;transform:translateY(-30%) scale(.9);transition:opacity .4s,transform .45s cubic-bezier(.3,1.4,.5,1);
+  box-shadow:0 -6px 0 -2px #c9a24a,0 6px 0 -2px #c9a24a,0 8px 14px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:0}
+.fscene .slotc span{font:400 clamp(10px,2.8vw,13px) var(--hand);color:#2a1b10}
+.fscene.open .slotc.full{opacity:1;transform:none}
+#cans{position:absolute;inset:0;pointer-events:none}
+.fcan2{position:absolute;width:15%;height:11.5%;border:0;background:none;border-radius:12px;pointer-events:auto;display:flex;align-items:flex-end;justify-content:center;transition:transform .2s,box-shadow .3s,opacity .3s}
+.fcan2 span{transform:translateY(55%);font:400 clamp(11px,3.2vw,14px) var(--hand);color:var(--parch);background:rgba(20,12,6,.75);padding:0 7px;border-radius:8px;white-space:nowrap;pointer-events:none}
+.fcan2.sel{box-shadow:0 0 0 2px rgba(255,214,140,.8),0 0 22px rgba(255,190,90,.6)}
+.fcan2.taken{opacity:.35}
+.fscene:not(.open) #cans{opacity:.5}
+.fscene .rn{position:absolute;left:6%;right:6%;top:56.5%;margin:0;text-align:center;font:italic clamp(13px,3.8vw,16px)/1.3 var(--body);color:var(--parch);text-shadow:0 1px 4px #000}
+.fscene .btns{position:absolute;left:0;right:0;top:70%;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#rCancel{position:absolute;right:2%;bottom:1%;color:var(--parch);text-shadow:0 1px 3px #000}
 @media (prefers-reduced-motion:reduce){.goo i,.panel,.hatch2{animation:none;transition:none}}
 @media (prefers-reduced-motion:reduce){.hung,.cl.body,.breath,#needle.full,.dark.pullme .chain b{animation:none}}
 </style>
@@ -488,13 +512,17 @@ body[data-room=dark] #cap{color:#ffb9a6}
   <div class="foot"><button class="ghost" id="toAlbum">the drying line</button><button class="ghost" id="cog">workshop</button></div>
 </section>
 
-<section class="room leather" id="ritual">
-  <p class="rt" id="rTitle">Open the back of the camera</p>
-  <div class="camback" id="camBack"><div class="chamber"><div class="slotc" id="slotc"></div></div><div class="hatch2" id="hatch2"><i class="hinge"></i><span id="hatchTxt">swipe to open</span></div></div>
-  <div class="cans" id="cans" hidden></div>
-  <p class="rn" id="rNote">Swipe the back to the left, or tap it.</p>
-  <div class="btns"><button class="brass" id="lightBtn" hidden>Light the lantern</button><button class="brass" id="stepOut" hidden>Step out the door</button></div>
-  <div class="foot"><button class="ghost" id="rCancel">back to the Study</button></div>
+<section class="room" id="ritual">
+  <div class="fscene" id="fscene">
+    <i class="fs-layer fs-open"></i><i class="fs-layer fs-closed"></i>
+    <p class="rt" id="rTitle">Open the back of the camera</p>
+    <div class="slotc" id="slotc" aria-hidden="true"><span></span></div>
+    <button class="camhot" id="camBack" aria-label="The back of the camera"></button>
+    <div id="cans"></div>
+    <p class="rn" id="rNote"></p>
+    <div class="btns"><button class="brass" id="lightBtn" hidden>Light the lantern</button><button class="brass" id="stepOut" hidden>Step out the door</button></div>
+    <button class="ghost" id="rCancel">back to the Study</button>
+  </div>
 </section>
 
 <section class="room" id="out">
@@ -1130,13 +1158,16 @@ async function enterStudy(){hum.off();slosh.off();fork.off();camStop();go('study
   $('#toAlbum').hidden=!known.length}
 /* loading the camera */
 let rStep=1,hx=null;
-function ritual(){const h=$('#hatch2'),c=$('#cans'),open=rStep===2||rStep===3;h.classList.toggle('open',open);c.hidden=!open;
-  $('#lightBtn').hidden=rStep!==4;$('#stepOut').hidden=rStep!==5;$('#hatchTxt').textContent=rStep===1?'swipe to open':'closed';
-  const sl=$('#slotc'),it=S.roll.intent,col=(INTENTS.find(x=>x[0]===it)||[])[1];sl.textContent=it||'';sl.classList.toggle('full',!!it);sl.style.background=col||'';
+const CANPOS=[[27.4,67.3],[50,67.3],[72.6,67.3],[27.4,79.7],[50,79.7],[72.6,79.7]];   /* where each canister sits in the painting */
+function ritual(){const sc=$('#fscene'),c=$('#cans'),open=rStep===2||rStep===3,it=S.roll.intent;sc.classList.toggle('open',open);
+  $('#lightBtn').hidden=rStep!==4;$('#stepOut').hidden=rStep!==5;
+  const sl=$('#slotc'),col=(INTENTS.find(x=>x[0]===it)||[])[1];sl.querySelector('span').textContent=it||'';sl.classList.toggle('full',!!it);sl.style.background=col||'';
   $('#rTitle').textContent=['','Open the back of the camera','Choose today’s film','Close the back, or swap the film','Light the lantern','Step out'][rStep];
-  $('#rNote').textContent=['','Swipe the back to the left, or tap it.','Each canister is a one-word intention for this walk.','Changed your mind? Tap another canister. Swipe the back closed (or tap it) to commit.','The lantern marks home: where this walk begins. The compass can always lead you back to it.','The door is right there.'][rStep];
-  if(open){c.innerHTML='';INTENTS.forEach(([w,col])=>{const b=el('button','fcan'+(it===w?' sel':''));b.style.background=col;b.innerHTML=esc(w)+'<small>FILM</small>';b.setAttribute('aria-pressed',it===w);
-    b.addEventListener('click',()=>{const swap=it&&it!==w;S.roll.intent=w;sfx.click();if(swap)sfx.fold();else sfx.peg();rStep=3;ritual()});c.append(b)})}}
+  $('#rNote').textContent=['','Swipe the back open, or tap it.','Each canister is a one-word intention.','',''][rStep]||'';
+  $('#rNote').hidden=rStep>=3;
+  c.innerHTML='';INTENTS.forEach(([w],i)=>{const b=el('button','fcan2'+(it===w&&open?' sel':'')+(it===w&&!open?' taken':''));const[x,y]=CANPOS[i];
+    b.style.left=(x-7.5)+'%';b.style.top=(y-5.75)+'%';b.innerHTML=`<span>${esc(w)}</span>`;b.setAttribute('aria-label',w+' film');b.setAttribute('aria-pressed',it===w);b.disabled=!open;
+    b.addEventListener('click',()=>{const swap=it&&it!==w;S.roll.intent=w;sfx.click();if(swap)sfx.fold();else sfx.peg();rStep=3;ritual()});c.append(b)})}
 function enterRitual(){if(S.walk){go('out');setPanel(1);return}S.roll=fresh();rStep=1;save();go('ritual');ritual();sfx.click()}
 function hatchTap(dir){if(rStep===1&&dir<=0){rStep=2;sfx.creak();ritual()}else if(rStep===3&&dir>=0){rStep=4;sfx.clunk();S.roll.loaded=true;S.roll.t0=Date.now();save();ritual();say('Loaded: '+S.roll.intent+'.',4000)}}
 /* stepping out */
