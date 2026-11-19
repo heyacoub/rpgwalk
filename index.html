@@ -409,6 +409,16 @@ body[data-room=dark] #cap{color:#ffb9a6}
 #study .foot{position:absolute;z-index:2;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 70px)}
 #study .foot .ghost{color:var(--parch);text-shadow:0 1px 3px #000}
 @media (prefers-reduced-motion:reduce){.lavaov i,#study .window.lit .glow{animation:none}}
+
+/* ---- journal: discovered creatures ---- */
+.dex{width:min(100%,420px);display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px}
+.dexi{border:0;background:none;color:var(--parch);display:flex;flex-direction:column;align-items:center;gap:6px;font:14px var(--body);min-width:0}
+.dexi .orb,.dexbig{display:block;width:88px;aspect-ratio:1;border-radius:50%;background-size:cover;border:4px solid var(--el,#c9a24a);box-shadow:0 0 0 2px #1a0f09,0 6px 12px rgba(0,0,0,.6),0 0 var(--glow,0) var(--el,#c9a24a)}
+.dexi span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dexi small{font:11px var(--type);opacity:.7}
+.dexbig{width:150px;align-self:center}
+.pagecard .prints button{border:0;padding:0;background:none}
+.pagecard .card{width:100%}
 @media (prefers-reduced-motion:reduce){.goo i,.panel,.hatch2{animation:none;transition:none}}
 @media (prefers-reduced-motion:reduce){.hung,.cl.body,.breath,#needle.full,.dark.pullme .chain b{animation:none}}
 </style>
@@ -480,7 +490,9 @@ body[data-room=dark] #cap{color:#ffb9a6}
 
 <section class="room leather" id="journal">
   <h2>Journal</h2>
+  <div class="tabs"><button class="tab" id="jtWalks" aria-pressed="true">Walks</button><button class="tab" id="jtDex" aria-pressed="false">Discovered creatures</button></div>
   <div class="jlist" id="jList"></div>
+  <div class="dex" id="jDex" hidden></div>
   <div class="foot"><button class="ghost" id="jBack">back to the Study</button></div>
 </section>
 
@@ -564,6 +576,7 @@ body[data-room=dark] #cap{color:#ffb9a6}
       <li>Walk intentions (Patience, Grace, Ease, Healing, Newness, Compassion) come from <a href="https://www.doyouyoga.com/5-ways-to-set-powerful-home-practice-intentions/" target="_blank" rel="noopener">DoYouYoga's guide to setting practice intentions</a>.</li>
       <li>Wild creatures are nudged onto the nearest street with the <a href="https://project-osrm.org" target="_blank" rel="noopener">Project OSRM</a> demo server (BSD-2), using OpenStreetMap data.</li>
       <li>Study, door, window, map, camera, journal, compass and parchment art: generated with FLUX.1 [dev] by Black Forest Labs, through Hugging Face Inference Providers.</li>
+      <li>Street names for creature homes: <a href="https://nominatim.org" target="_blank" rel="noopener">Nominatim</a>, OpenStreetMap data.</li>
       <li>Every sound is synthesised in the browser. The camera, gauge, darkroom and clockwork creatures are drawn in code.</li>
     </ul>
     <button class="brass" id="shut">Close the workshop</button>
@@ -918,7 +931,7 @@ async function conjure(pl){const note=S.darkNote||'',{K:K0,tr,seed}=describe(pl)
         r=await api({action:'conjure',token:S.user.token,photo:await toB64(small),reflection:note,plateId:pl.id,takenAt:pl.t,lat:pl.lat,lon:pl.lon,element:pl.wild?pl.wild.el:null,rarity:pl.wild?pl.wild.rar:null});
       meta=r.creature;meta.lore=meta.lore||'';
       if(r.imageUrl){const img=await (await fetch(r.imageUrl)).blob();
-        return{kind:meta.kind,name:meta.name,mood:meta.mood,subject:meta.subject,line:meta.lore,col:(KINDS[meta.mood]||KINDS.quiet).col,by:meta.painter||'painter',final:img,synced:true,el:meta.element||null,rar:meta.rarity||(pl.wild&&pl.wild.rar)||null}}
+        return{kind:meta.kind,name:meta.name,mood:meta.mood,subject:meta.subject,line:meta.lore,col:(KINDS[meta.mood]||KINDS.quiet).col,by:meta.painter||'painter',final:img,synced:true,where:meta.where||null,height:meta.height||null,el:meta.element||null,rar:meta.rarity||(pl.wild&&pl.wild.rar)||null}}
     }catch(e){console.warn('Darkroom spirit unavailable, using clockwork:',e&&e.message)}}
   const m=meta&&KINDS[meta.mood]?meta:null,K=m?KINDS[m.mood]:K0,b=localMeta(pl);
   const cr={kind:m?m.kind||K.kind:b.kind,name:m?m.name||b.name:b.name,mood:m?m.mood:b.mood,subject:m?m.subject:null,line:m?m.lore||K.line:K.line,col:K.col,by:'clockwork',el:(m&&m.element)||(pl.wild&&pl.wild.el)||null,rar:pl.wild?pl.wild.rar:null,
@@ -931,9 +944,10 @@ async function syncPlate(pl){if(!S.user||pl.synced||!pl.final||!pl.cr)return;
 async function syncAll(){if(!S.user)return;for(const pl of known)if(!pl.synced)await syncPlate(pl)}
 function printEl(pl,cr){const d=el('div','print');d.style.aspectRatio=pl.w+' / '+pl.h;const ph=el('img','photo');ph.alt='';ph.src=U(pl.final||pl.blob);d.append(ph);return d}
 function addFinal(d,src){const im=el('img','cl full');im.alt='';im.src=U(src);d.append(im)}
-async function saveImage(src,name){try{const blob=typeof src==='string'?await (await fetch(src)).blob():src,file=new File([blob],name.replace(/[^a-z0-9 _-]/gi,'')+'.jpg',{type:blob.type||'image/jpeg'});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}
-    const a=el('a');a.href=URL.createObjectURL(file);a.download=file.name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
+async function saveImage(src,name,orig){try{const mk=async(s2,n)=>{const blob=typeof s2==='string'?await (await fetch(s2)).blob():s2;return new File([blob],n.replace(/[^a-z0-9 _-]/gi,'')+'.jpg',{type:blob.type||'image/jpeg'})};
+    const files=[await mk(src,name)];if(orig)files.push(await mk(orig,name+' (original photo)'));   /* the print with its creature, and the photo as you took it */
+    if(navigator.canShare&&navigator.canShare({files})){await navigator.share({files,title:name});return}
+    files.forEach((file,i)=>setTimeout(()=>{const a=el('a');a.href=URL.createObjectURL(file);a.download=file.name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)},i*600))}
   catch(e){if(e&&e.name!=='AbortError')say('Could not save the image.',4000)}}
 
 /* ---------- the darkroom ---------- */
@@ -1010,14 +1024,14 @@ function card(o){const c=el('div','card'),d=new Date(o.t);c.tabIndex=0;c.setAttr
     ${o.note!=null?`<p class="note">\u201C${esc(o.note)}\u201D</p>`:''}${o.plate?`<span class="stamp">plate ${o.plate}</span>`:''}
     <p class="meta">${o.who?'Found by '+esc(o.who)+'<br>':''}${d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'})} · ${d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}<br>
     ${o.lat!=null?Number(o.lat).toFixed(5)+', '+Number(o.lon).toFixed(5):'place not recorded'}<br>${byLine(o.by)}${o.unsynced?'<br>Not shared yet.':''}</p>`;
-  const sv=el('button','brass save','Save image');sv.addEventListener('click',e=>{e.stopPropagation();saveImage(o.src,o.name+' the '+o.kind)});bk.append(sv);
+  const sv=el('button','brass save',o.orig?'Save both photos':'Save image');sv.addEventListener('click',e=>{e.stopPropagation();saveImage(o.src,o.name+' the '+o.kind,o.orig)});bk.append(sv);
   fl.append(fr,bk);c.append(fl);const flip=()=>c.classList.toggle('back');c.addEventListener('click',flip);c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}});return c}
 async function enterAlbum(){hum.off();slosh.off();known=(await DB.all()).filter(p=>p.dev&&p.cr);go('album');say('');renderAlbum();syncAll()}
 async function renderAlbum(){const cards=$('#cards'),fr=$('#friends'),sub=$('#albumSub');cards.innerHTML='';
   $('#tabMine').setAttribute('aria-pressed',albumMode==='mine');$('#tabFriends').setAttribute('aria-pressed',albumMode==='friends');fr.hidden=albumMode!=='friends';
   if(albumMode==='mine'){sub.textContent=known.length?'Tap a print to read its back.':'Nothing developed yet.';
     [...known].reverse().forEach(pl=>cards.append(card({el:pl.cr.el,rar:pl.cr.rar,kind:pl.cr.kind,name:pl.cr.name,subject:pl.cr.subject,line:pl.cr.line,note:pl.note||'',plate:ROMAN[pl.n]||pl.n,t:pl.t,lat:pl.lat,lon:pl.lon,by:pl.cr.by,
-      unsynced:S.user&&!pl.synced,src:pl.final||pl.blob,print:printEl(pl)})));
+      unsynced:S.user&&!pl.synced,src:pl.final||pl.blob,orig:pl.final?pl.blob:null,print:printEl(pl)})));
     cards.scrollLeft=0;drawMap(known.map(p=>({lat:p.lat,lon:p.lon,col:p.cr.col,label:p.cr.name+', a '+p.cr.kind})));return}
   sub.textContent='Loading the other walkers\u2026';
   try{const r=await api({action:'list',username:friend||undefined},20000);const others=(r.walkers||[]).map(w=>w.username).filter(u=>!S.user||u!==S.user.username);
@@ -1154,16 +1168,33 @@ function pageCard(p,isNew){const c=el('div','pagecard'),d=new Date(p.t0);
     r.slice(0,n).forEach((q,i)=>{const[X,Y]=P(q);i?x.lineTo(X,Y):x.moveTo(X,Y)});x.stroke();const[hx,hy]=P(r[0]);x.fillStyle='#b46f12';x.beginPath();x.arc(hx,hy,8,0,7);x.fill()};draw(1);
   const pr=el('div','prints');c.append(el('span','lbl','prints'),pr);
   DB.all().then(all=>{const ps=all.filter(q=>q.roll===p.id);if(!ps.length)pr.textContent='No photos on this walk.';
-    ps.forEach(q=>{if(q.dev&&q.final){const im=el('img');im.alt=q.cr?q.cr.name:'print';im.src=U(q.final);im.style.setProperty('--r',(Math.random()*8-4)+'deg');pr.append(im)}
+    ps.forEach(q=>{if(q.dev&&q.final){const b2=el('button'),im=el('img');b2.setAttribute('aria-label','Open the print of '+(q.cr?q.cr.name:'this creature'));im.alt='';im.src=U(q.final);im.style.setProperty('--r',(Math.random()*8-4)+'deg');b2.append(im);b2.addEventListener('click',()=>showPrint(q));pr.append(b2)}
       else{const s2=el('span','',' undeveloped plate ');s2.style.cssText='font:13px var(--type);padding:4px 8px;border:1px dashed #6f5119';pr.append(s2)}})});
   const bt=el('div','btns'),play=el('button','brass small','Play the route');play.addEventListener('click',()=>{let k=0;const iv=setInterval(()=>{k+=.015;draw(Math.min(1,k));if(k>=1)clearInterval(iv)},30)});bt.append(play);c.append(bt);return{c,bt}}
 function showPage(p,isNew){const sh=$('#sum');sh.innerHTML='';const{c,bt}=pageCard(p,isNew);const ok=el('button','brass small',isNew?'Into the journal':'Close');
   ok.addEventListener('click',()=>{sh.hidden=true;if(!isNew)return;say(p.finds.length||p.plates?'Your plates are waiting behind the darkroom door.':'Rest well.',6000)});bt.append(ok);sh.append(c);sh.hidden=false}
-function enterJournal(){const l=$('#jList');l.innerHTML='';if(!S.pages.length)l.innerHTML='<p style="text-align:center;font-style:italic">No walks yet. Pages appear here after each one.</p>';
+function cardFor(pl){return card({el:pl.cr.el,rar:pl.cr.rar,kind:pl.cr.kind,name:pl.cr.name,subject:pl.cr.subject,line:pl.cr.line,note:pl.note||'',plate:ROMAN[pl.n]||pl.n,t:pl.t,lat:pl.lat,lon:pl.lon,by:pl.cr.by,
+  unsynced:S.user&&!pl.synced,src:pl.final||pl.blob,orig:pl.final?pl.blob:null,print:printEl(pl)})}
+function sheet(nodes){const sh=$('#sum');sh.innerHTML='';const c=el('div','pagecard');nodes.forEach(n=>c.append(n));const x=el('button','brass small','Close');x.addEventListener('click',()=>sh.hidden=true);c.append(x);sh.append(c);sh.hidden=false;return c}
+function showPrint(pl){sheet([el('span','lbl','tap the print to turn it over'),cardFor(pl)])}
+const POS={left:'20%',center:'50%',right:'80%',top:'22%',middle:'50%',bottom:'78%'};
+function orb(pl,cls){const o=el('i',cls);o.style.backgroundImage=`url(${U(pl.final||pl.blob)})`;o.style.backgroundPosition=`${POS[pl.cr.where]||'50%'} ${POS[pl.cr.height]||'50%'}`;
+  o.style.setProperty('--el',ELCOL[pl.cr.el]||'#c9a24a');o.style.setProperty('--glow',{uncommon:'10px',rare:'18px',legendary:'28px'}[pl.cr.rar]||'0');return o}
+async function placeName(pl){if(pl.place||pl.lat==null)return pl.place||null;try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&lat=${pl.lat}&lon=${pl.lon}`);const j=await r.json(),a=j.address||{};
+  pl.place=[a.road||a.pedestrian||a.footway,a.neighbourhood||a.suburb||a.quarter,a.city||a.town||a.village].filter(Boolean).join(', ')||j.display_name||null;if(pl.place)DB.put(pl);return pl.place}catch(e){return null}}
+function showCreature(pl){const c=pl.cr,d=new Date(pl.t),wh=el('p'),dist=S.fix&&pl.lat!=null?Math.round(hav(S.fix,pl)):null;
+  wh.innerHTML=pl.lat!=null?`<span class="lbl">where it lives</span><br><span id="plName">finding the street…</span><br><small>${Number(pl.lat).toFixed(5)}, ${Number(pl.lon).toFixed(5)}${dist!=null?' · '+(dist<1000?dist+' m':(dist/1000).toFixed(1)+' km')+' from you':''}</small><br><a href="https://maps.apple.com/?ll=${pl.lat},${pl.lon}&q=${encodeURIComponent(c.name)}" target="_blank" rel="noopener">Open in Maps</a>`:'<span class="lbl">where it lives</span><br>The place was not recorded.';
+  const info=el('div');info.innerHTML=`<h2>${esc(c.name)}</h2><p>A ${esc(c.kind)}${c.subject?', born from a '+esc(c.subject):''}.</p>${c.el||c.rar?`<p><span class="lbl">element · rarity</span><br>${esc(c.el||'unknown')} · ${esc(c.rar||'common')}</p>`:''}<p><span class="lbl">mood</span><br>${esc(c.mood||'quiet')}</p><p class="hand" style="font-size:20px">${esc(c.line||'')}</p><p><span class="lbl">discovered</span><br>by you, ${d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}</p>`;
+  const sp=el('button','brass small','See the print');sp.addEventListener('click',()=>showPrint(pl));sheet([orb(pl,'dexbig'),info,wh,sp]);placeName(pl).then(n=>{const e2=$('#plName');if(e2)e2.textContent=n||'A quiet street with no name on the map.'})}
+let jTab='walks';async function enterDex(){const g=$('#jDex');g.innerHTML='';const all=(await DB.all()).filter(p=>p.dev&&p.cr).sort((a,b)=>b.t-a.t);
+  if(!all.length)g.innerHTML='<p style="grid-column:1/-1;text-align:center;font-style:italic">No creatures yet. Develop your plates in the darkroom to meet them.</p>';
+  all.forEach(pl=>{const b=el('button','dexi');b.setAttribute('aria-label',pl.cr.name+', a '+pl.cr.kind);b.append(orb(pl,'orb'),el('span','',esc(pl.cr.name)),el('small','',esc([pl.cr.rar,pl.cr.el].filter(Boolean).join(' ')||pl.cr.kind)));b.addEventListener('click',()=>showCreature(pl));g.append(b)})}
+function jSwitch(t){jTab=t;$('#jtWalks').setAttribute('aria-pressed',t==='walks');$('#jtDex').setAttribute('aria-pressed',t==='dex');$('#jList').hidden=t!=='walks';$('#jDex').hidden=t!=='dex';if(t==='dex')enterDex()}
+function enterJournal(){jSwitch(jTab);const l=$('#jList');l.innerHTML='';if(!S.pages.length)l.innerHTML='<p style="text-align:center;font-style:italic">No walks yet. Pages appear here after each one.</p>';
   S.pages.forEach(p=>{const b=el('button','jrow');b.innerHTML=`<span><b>Walk ${p.n}</b> · ${esc(p.intent||'—')}</span><span>${fmtD(p.dist)}${p.finds.length?' · '+p.finds.length+' found':''}</span>`;b.addEventListener('click',()=>showPage(p,false));l.append(b)});go('journal')}
 function wireWalk(){
   document.addEventListener('click',askMotion,{once:true,capture:true});document.addEventListener('touchend',askMotion,{once:true,capture:true});
-  $('#deskCam').addEventListener('click',()=>{askMotion();enterRitual()});$('#deskBook').addEventListener('click',enterJournal);$('#jBack').addEventListener('click',enterStudy);
+  $('#deskCam').addEventListener('click',()=>{askMotion();enterRitual()});$('#jtWalks').addEventListener('click',()=>jSwitch('walks'));$('#jtDex').addEventListener('click',()=>jSwitch('dex'));$('#deskBook').addEventListener('click',enterJournal);$('#jBack').addEventListener('click',enterStudy);
   $('#darkDoor').addEventListener('click',()=>{sfx.click();enterDark()});
   $('#leaveDark').addEventListener('click',()=>{sfx.fold();hum.off();slosh.off();dk.stage='off';dk.cur=null;dk.cr=null;   /* anything not yet lifted out stays a waiting plate */
     document.querySelectorAll('.inkfall').forEach(x=>x.remove());enterStudy();say('Back in the Study. Unfinished plates are still waiting.',5000)});
