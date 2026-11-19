@@ -239,3 +239,7 @@ Research and proposal: Personal project doc `claude/walking-app/map-design.md` (
 - Under the fog: parchment plus a faint pencil draft of the main streets. Where you've walked: inked streets, hatched buildings, painted parks and water, on a warm wash.
 - Landmarks: up to 6 per square from real places (parks, worship, fountains, viewpoints, art, history, towers, named cafés), with invented names ("the Amber Fountain"). They glow as "?" through the fog; within 30 m they're discovered: the fog bursts open (~60 m), chime, name inked, saved to the walk's journal page. Rewards are placeholders.
 - Compass rose and a brass frame on the map.
+
+### 19 Nov: setup progress
+- **Yacoub (18 Nov, again 19 Nov):** setting up the camera must show progress with a clear start and end. Not a number, not "filling with light".
+- Built: a brass dial. During the 60 s setup, the needle climbs from COLD to READY, the copper arc fills behind it, and each tick mark gives a soft click. The ready lamp lights, holds a beat, and then the lens opens. The words under the needle change from "warming up" to "gears turning" to "lens settling" to "nearly there".
