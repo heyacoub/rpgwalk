@@ -490,6 +490,20 @@ body[data-room=dark] #cap{color:#ffb9a6}
 .fscene .rn{position:absolute;left:6%;right:6%;top:56.5%;margin:0;text-align:center;font:italic clamp(13px,3.8vw,16px)/1.3 var(--body);color:var(--parch);text-shadow:0 1px 4px #000}
 .fscene .btns{position:absolute;left:0;right:0;top:70%;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 #rCancel{position:absolute;right:2%;bottom:1%;color:var(--parch);text-shadow:0 1px 3px #000}
+
+/* ---- setting up: a brass gauge whose needle sweeps from cold to the lit ready lamp ---- */
+.pgauge{position:absolute;left:50%;top:44%;width:min(78vmin,340px);aspect-ratio:200/204;max-width:100%;translate:-50% -50%;transition:opacity .8s,scale .8s;filter:drop-shadow(0 10px 18px rgba(0,0,0,.7))}
+.pgauge svg{width:100%;height:100%;display:block}
+#mount.opening .pgauge,#mount.ready .pgauge{opacity:0;scale:1.15;pointer-events:none}
+#mount .works{opacity:.18}
+.pg-track{fill:none;stroke:#5c4116;stroke-width:7;stroke-linecap:round;opacity:.35}
+.pg-fill{fill:none;stroke:#c9741f;stroke-width:7;stroke-linecap:round}
+.pg-ticks line{stroke:#3a2a12}
+.pg-lbl{font:600 9px var(--type);letter-spacing:.12em;fill:#3a2a12;opacity:.75}
+.pg-word{font:italic 11px var(--body);fill:#3a2a12;opacity:.8}
+.pg-lamp{fill:#4a2410;stroke:#3a2a12;stroke-width:2;transition:fill .3s}
+.pgauge.lit .pg-lamp{fill:#ffd36a;filter:drop-shadow(0 0 6px #ffb52e)}
+.pgauge.lit .pg-rl{fill:#8a3a0c;opacity:1}
 @media (prefers-reduced-motion:reduce){.goo i,.panel,.hatch2{animation:none;transition:none}}
 @media (prefers-reduced-motion:reduce){.hung,.cl.body,.breath,#needle.full,.dark.pullme .chain b{animation:none}}
 </style>
@@ -578,6 +592,22 @@ body[data-room=dark] #cap{color:#ffb9a6}
   <video id="vf" playsinline muted autoplay></video>
   <img id="pickPrev" alt="" hidden>
   <div class="bezel"></div><div class="works" aria-hidden="true"><i class="gear g1"></i><i class="gear g2"></i><i class="gear g3"></i></div>
+  <div class="pgauge" id="pgauge" role="progressbar" aria-label="The camera is setting itself up" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <svg viewBox="0 10 200 204" aria-hidden="true">
+      <defs><radialGradient id="pgFace" cx="45%" cy="38%"><stop offset="0" stop-color="#f6e7bf"/><stop offset=".75" stop-color="#e2c98d"/><stop offset="1" stop-color="#b8924a"/></radialGradient>
+        <linearGradient id="pgRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3dc93"/><stop offset=".5" stop-color="#a47a2c"/><stop offset="1" stop-color="#5c4116"/></linearGradient></defs>
+      <circle cx="100" cy="112" r="100" fill="url(#pgRim)"/>
+      <circle cx="100" cy="112" r="93" fill="url(#pgFace)" stroke="#5c4116" stroke-width="1.5"/>
+      <path class="pg-track" d="M29.0 153.0 A82 82 0 1 1 171.0 153.0" pathLength="100"/>
+      <path class="pg-fill" id="pgFill" d="M29.0 153.0 A82 82 0 1 1 171.0 153.0" pathLength="100" stroke-dasharray="0 100"/>
+      <g class="pg-ticks"><line x1="39.4" y1="147.0" x2="49.8" y2="141.0" stroke-width="3"/><line x1="31.1" y1="124.2" x2="37.0" y2="123.1" stroke-width="1.6"/><line x1="31.1" y1="99.8" x2="37.0" y2="100.9" stroke-width="1.6"/><line x1="39.4" y1="77.0" x2="49.8" y2="83.0" stroke-width="3"/><line x1="55.0" y1="58.4" x2="58.9" y2="63.0" stroke-width="1.6"/><line x1="76.1" y1="46.2" x2="78.1" y2="51.9" stroke-width="1.6"/><line x1="100.0" y1="42.0" x2="100.0" y2="54.0" stroke-width="3"/><line x1="123.9" y1="46.2" x2="121.9" y2="51.9" stroke-width="1.6"/><line x1="145.0" y1="58.4" x2="141.1" y2="63.0" stroke-width="1.6"/><line x1="160.6" y1="77.0" x2="150.2" y2="83.0" stroke-width="3"/><line x1="168.9" y1="99.8" x2="163.0" y2="100.9" stroke-width="1.6"/><line x1="168.9" y1="124.2" x2="163.0" y2="123.1" stroke-width="1.6"/><line x1="160.6" y1="147.0" x2="150.2" y2="141.0" stroke-width="3"/></g>
+      <text x="62.7" y="138.3" text-anchor="middle" class="pg-lbl">COLD</text><text x="137.3" y="138.3" text-anchor="middle" class="pg-lbl pg-rl">READY</text>
+      <circle class="pg-lamp" id="pgLamp" cx="160.0" cy="167.9" r="6.5"/>
+      <text x="100" y="152" text-anchor="middle" class="pg-word" id="pgWord">warming up</text>
+      <g id="pgNeedle" transform="rotate(-120 100 112)"><path d="M97 126 L100 46 L103 126 Z" fill="#6e1d12"/><path d="M98 126 L100 48 L100 126 Z" fill="#b2392a"/></g>
+      <circle cx="100" cy="112" r="7" fill="url(#pgRim)" stroke="#3a2a12"/>
+    </svg>
+  </div>
   <i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i>
   <div id="nolens" hidden>
     <p>This device gave the camera no lens.</p>
@@ -845,18 +875,24 @@ function camStop(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=nul
 function enterMount(){if(!S.roll.loaded){S.roll.loaded=true;save();sfx.chime()}
   mp=0;mt=0;lowT=0;darkRun=0;mstate='mounting';pick=null;pickPrev.hidden=true;mountEl.classList.remove('ready','wob');$('#nolens').hidden=true;
   mountEl.classList.remove('opening');mountEl.style.setProperty('--p',0);mountEl.style.setProperty('--iris',0);tickT=0;crankA=0;$('#crank').style.setProperty('--a','0deg');zoom=1;setZoom(1);
+  pgTick=-1;pgShow(0,0);$('#pgauge').classList.remove('lit');
   go('mount');sfx.creak();fork.on();camStart();wake();say('Setting up. Look around while it works.');$('#prepNow').hidden=false}
-let tickT=0,openT=0;
-function prepared(){if(mstate!=='mounting')return;mp=1;mstate='opening';openT=0;$('#prepNow').hidden=true;
+let tickT=0,openT=0,pgTick=-1;
+const PGWORDS=['warming up','gears turning','lens settling','nearly there','ready'];
+function pgShow(k,t){const a=-120+240*k+(k<1?Math.sin(t*23)*.5+Math.sin(t*7.3)*.4:0);   /* the needle trembles a little, like a real spring */
+  $('#pgNeedle').setAttribute('transform',`rotate(${a.toFixed(2)} 100 112)`);$('#pgFill').setAttribute('stroke-dasharray',`${(k*100).toFixed(2)} 100`);
+  const n=Math.floor(k*12+1e-6);if(n!==pgTick){if(pgTick>=0&&n>pgTick)sfx.detent(n%3?1:5);pgTick=n;   /* a soft click at every tick mark */
+    $('#pgauge').setAttribute('aria-valuenow',Math.round(k*100));$('#pgWord').textContent=PGWORDS[k>=1?4:Math.min(3,Math.floor(k*4))]}}
+function prepared(){if(mstate!=='mounting')return;mp=1;mstate='opening';openT=-.7;$('#prepNow').hidden=true;pgShow(1,0);$('#pgauge').classList.add('lit');   /* the lamp lights, holds a beat, then the lens opens */
   sfx.chime();fork.set((n,t)=>n.g.gain.setTargetAtTime(.02,t,1.2));say('Ready.')}
 function fold(msg){mstate='idle';$('#prepNow').hidden=true;mountEl.classList.remove('opening');fork.off();camStop();sfx.fold();upArmed=false;go('out');setPanel(2);say(msg||'',6000)}
 function tickMount(dt){
-  if(mstate==='opening'){openT+=dt;const k=smooth(openT,0,3.2);mountEl.classList.add('opening');
+  if(mstate==='opening'){openT+=dt;if(openT<0)return;const k=smooth(openT,0,3.2);mountEl.classList.add('opening');
     mountEl.style.setProperty('--p',k.toFixed(4));mountEl.style.setProperty('--iris',smooth(openT,.8,3.6).toFixed(4));
     if(openT>=3.6){mstate='ready';mountEl.classList.remove('opening');mountEl.classList.add('ready');sfx.click();$('#nolens').hidden=camOK;
       say(camOK?'Frame it. Turn the crank to zoom.':'Choose the plate.')}return}
   if(mstate!=='mounting')return;
-  const T=mountSecs();mt+=dt;mp=Math.min(1,mp+dt/T);                 /* the camera sets itself up; you just look */
+  const T=mountSecs();mt+=dt;mp=Math.min(1,mp+dt/T);pgShow(mp,mt);                 /* the camera sets itself up; you watch the needle climb */
   const ph=(mt%10)/10,breath=ph<.4?(.5-.5*Math.cos(Math.PI*ph/.4)):(.5+.5*Math.cos(Math.PI*(ph-.4)/.6)),ci=Math.floor(mt/9)%CHORDS.length;
   fork.set((n,t)=>{n.g.gain.setTargetAtTime(Math.min(1,mt/6)*(.05+.03*breath),t,.6);   /* fades in, then breathes 4 s in, 6 s out */
     if(n.chord!==ci){n.chord=ci;n.os.forEach(x=>x.o.frequency.setTargetAtTime(CHORDS[ci][x.i],t,1.6))}});
