@@ -425,6 +425,32 @@ body[data-room=dark] #cap{color:#ffb9a6}
 #mm.leaflet-container{background:transparent}
 #pMap::after{content:"";position:absolute;inset:0;z-index:550;pointer-events:none;box-shadow:inset 0 0 0 6px #5c3a1a,inset 0 0 0 9px #c9a24a,inset 0 0 50px rgba(70,40,10,.55)}
 .rose{position:absolute;z-index:560;left:calc(env(safe-area-inset-left,0px) + 18px);top:calc(env(safe-area-inset-top,0px) + 18px);width:64px;height:64px;pointer-events:none;opacity:.85}
+
+/* ---- the compass as one painted instrument ---- */
+#pCompass{padding:max(10px,env(safe-area-inset-top)) 0 calc(env(safe-area-inset-bottom,0px) + 56px);background:radial-gradient(#3a2414,#0d0704)}
+.device{position:relative;height:min(100%,calc(100vw * 1344 / 768));aspect-ratio:768/1344;max-width:100%;background:var(--a-device) center/100% 100% no-repeat;filter:drop-shadow(0 14px 30px rgba(0,0,0,.7))}
+.odo{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#2a1b10;text-shadow:0 1px 0 rgba(255,255,255,.4)}
+.odo span{font:10px var(--type);letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+.odo b{font:400 clamp(18px,6vw,28px)/1 var(--disp);font-variant-numeric:tabular-nums}
+.face{position:absolute;left:18%;top:22.71%;width:64%;height:36.57%;border-radius:50%;border:0;padding:0;background:none;overflow:visible}
+.dcard{position:absolute;inset:0;border-radius:50%;overflow:hidden;transition:transform .5s cubic-bezier(.3,1.2,.4,1)}
+.cimg{position:absolute;left:-28.125%;top:-62.1%;width:156.25%;height:273.45%;background:var(--a-device) center/100% 100% no-repeat}
+#bigNeedle{position:absolute;left:50%;top:50%;width:14px;height:80%;margin:-40% 0 0 -7px;transition:transform .7s cubic-bezier(.3,1.5,.4,1),opacity .4s;filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
+#bigNeedle::before{content:"";position:absolute;inset:0 0 50% 0;background:linear-gradient(90deg,#6e1d12,#b2392a);clip-path:polygon(50% 0,100% 100%,0 100%)}
+#bigNeedle::after{content:"";position:absolute;inset:50% 0 0 0;background:linear-gradient(90deg,#1e1408,#4a3618);clip-path:polygon(0 0,100% 0,50% 100%)}
+.face.northmode #bigNeedle{opacity:0}
+.face .warmth{position:absolute;inset:-6%;border-radius:50%;box-shadow:0 0 50px 18px rgba(255,190,70,.55);opacity:0;transition:opacity 1s;pointer-events:none}
+.face.warm .warmth{opacity:1}
+.knob{position:absolute;width:17%;height:9.71%;border-radius:50%;border:0;background:none;transition:box-shadow .2s,transform .1s}
+.knob[aria-pressed=true]{box-shadow:inset 0 6px 12px rgba(0,0,0,.55),0 0 18px 4px rgba(255,200,90,.55);transform:scale(.96)}
+.knob:active{transform:scale(.92)}
+.readout.readout{position:absolute;left:16%;top:75.6%;width:68%;height:4.8%;margin:0;display:flex;align-items:center;justify-content:center;text-align:center;
+  font:italic clamp(11px,3.4vw,14px)/1.15 var(--body);color:#2a1b10;text-shadow:0 1px 0 rgba(255,240,200,.5);overflow:hidden;min-height:0;max-width:none}
+.plunger{position:absolute;left:37%;top:82.5%;width:26%;height:8.2%;border-radius:50%;border:0;background:none;overflow:hidden}
+.plunger i{position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(255,240,200,.65) calc(var(--h,0) * 100%),transparent 0);mix-blend-mode:screen}
+.plunger:active{transform:scale(.95)}
+.tabs3{gap:14px}
+.tabs3 button{min-height:30px;padding:2px 10px;font-size:13px;background:rgba(20,13,8,.6);border-color:rgba(201,162,74,.4)}
 @media (prefers-reduced-motion:reduce){.goo i,.panel,.hatch2{animation:none;transition:none}}
 @media (prefers-reduced-motion:reduce){.hung,.cl.body,.breath,#needle.full,.dark.pullme .chain b{animation:none}}
 </style>
@@ -459,13 +485,18 @@ body[data-room=dark] #cap{color:#ffb9a6}
 <section class="room" id="out">
   <div class="track" id="track">
     <div class="panel" id="pMap"><div id="mm"></div><canvas id="fog"></canvas><svg class="rose" viewBox="-50 -50 100 100" aria-hidden="true"><circle r="30" fill="none" stroke="#3a2410" stroke-width="1.5"/><circle r="22" fill="none" stroke="#3a2410" stroke-width=".8"/><path d="M0-46 L7 0 L0 46 L-7 0Z" fill="#3a2410"/><path d="M-46 0 L0 7 L46 0 L0 -7Z" fill="#8a6a22"/><path d="M0-46 L7 0 L-7 0Z" fill="#8a2a1c"/><text y="-36" x="-5" font-size="0" fill="#3a2410">N</text><text x="0" y="-40" text-anchor="middle" font-family="IM Fell English SC,serif" font-size="11" fill="#2a1b10" dy="-2">N</text></svg><button class="brass small" id="mmBack" hidden>Back to the Study</button></div>
-    <div class="panel leather" id="pCompass">
-      <div class="instr">
-        <div class="stats"><div><span>time out</span><b id="tOut">0:00</b></div><div><span>distance</span><b id="dOut">0.00 km</b></div></div>
-        <div class="bigrose" id="bigRose"><span class="cn n">N</span><span class="cn s">S</span><span class="cn w">W</span><span class="cn e">E</span><i id="bigNeedle"></i></div>
-        <div class="modes" id="modes"><button data-m="north" aria-pressed="true">North</button><button data-m="home" aria-pressed="false">Take me home</button><button data-m="creature" aria-pressed="false">Nearest creature</button></div>
+    <div class="panel" id="pCompass">
+      <div class="device" id="device">
+        <div class="odo" style="left:13.5%;top:9%;width:32%;height:7%"><span>time out</span><b id="tOut">0:00</b></div>
+        <div class="odo" style="left:54.5%;top:9%;width:32%;height:7%"><span>distance</span><b id="dOut">0.00 km</b></div>
+        <button class="face" id="bigRose" aria-label="The compass. Tap to wake it if it isn't turning."><div class="dcard" id="card"><i class="cimg"></i></div><i id="bigNeedle"></i><i class="warmth"></i></button>
+        <div id="modes">
+          <button class="knob" data-m="north" aria-pressed="true" aria-label="North" style="left:13.5%;top:63.1%"></button>
+          <button class="knob" data-m="home" aria-pressed="false" aria-label="Take me home" style="left:41.5%;top:63.1%"></button>
+          <button class="knob" data-m="creature" aria-pressed="false" aria-label="Nearest creature" style="left:69.5%;top:63.1%"></button>
+        </div>
         <p class="readout" id="readout">A plain compass.</p>
-        <button class="brass" id="endWalk">Hold to end the walk</button>
+        <button class="plunger" id="endWalk" aria-label="Hold to end the walk"><i></i></button>
       </div>
     </div>
     <div class="panel leather" id="pCam">
@@ -562,6 +593,10 @@ body[data-room=dark] #cap{color:#ffb9a6}
     <label><input type="radio" name="scene" value="a"><span>Painting A</span></label>
     <label><input type="radio" name="scene" value="b"><span>Painting B</span></label>
     <label><input type="radio" name="scene" value="c"><span>Painting C</span></label>
+    <h3>Compass painting</h3>
+    <label><input type="radio" name="device" value="a"><span>Painting A</span></label>
+    <label><input type="radio" name="device" value="b"><span>Painting B</span></label>
+    <label><input type="radio" name="device" value="c"><span>Painting C</span></label>
     <h3>Bench testing</h3>
     <label><input type="checkbox" id="setBench"><span>Fast mode: 8-second mount, 20-second wind, home counts after 30 m.</span></label>
     <label><input type="checkbox" id="setManual"><span>Buttons instead of gestures.</span></label>
@@ -1066,10 +1101,11 @@ async function drawMap(list){const pts=(list||[]).filter(p=>p.lat!=null),m=$('#m
 const INTENTS=[['Patience','#cfe1ec'],['Grace','#ecd9ef'],['Ease','#d8ead0'],['Healing','#f3d6c8'],['Newness','#f4e7b4'],['Compassion','#e9dfd0']];  /* words from DoYouYoga's intention guide */
 const ELEMENTS=['Water','Stone','Leaf','Ember','Sky','City'],ELCOL={Water:'#3b7fb8',Stone:'#7d7468',Leaf:'#4f8a3a',Ember:'#c8502a',Sky:'#7aa7d8',City:'#8a6a22'};
 const waiting=p=>!p.dev&&(p.roll!==S.roll.id||S.roll.ended||!S.walk);
+const DEVICES={a:'device-a',b:'device-b',c:'device-c'};function setDevice(k){S.set.device=DEVICES[k]?k:'a';document.documentElement.style.setProperty('--a-device',`url(${ARTB}${DEVICES[S.set.device]}.${S.set.device==='c'?'jpg':'png'})`);save()}
 const SCENES={a:'study-a.jpg',b:'study-b.jpg',c:'study-c.png'};function setScene(k){S.set.scene=SCENES[k]?k:'a';document.documentElement.style.setProperty('--a-scene',`url(${ARTB}${SCENES[S.set.scene]})`);save()}
 const ARTB='https://ogljcibwiaryxoviwabs.supabase.co/storage/v1/object/public/prints/art/',ART_N={room:'study-room',map:'map',door:'door',wdark:'window-dark',wlit:'window-lit',cam:'camera',book:'journal',compass:'compass'};
 function setArt(k){S.set.art=k;const pre=k&&k!=='storybook'?k+'-':'';for(const v in ART_N)document.documentElement.style.setProperty('--a-'+v,`url(${ARTB}${pre}${ART_N[v]}.jpg)`);save()}
-if(!['forest','amber','moon','sketch'].includes(S.set.art)||!S.artV2){S.set.art='amber';S.artV2=1}setArt(S.set.art);if(!S.sceneV){S.set.scene='c';S.sceneV=1}setScene(S.set.scene);
+if(!['forest','amber','moon','sketch'].includes(S.set.art)||!S.artV2){S.set.art='amber';S.artV2=1}setArt(S.set.art);if(!S.sceneV){S.set.scene='c';S.sceneV=1}setScene(S.set.scene);setDevice(S.set.device||'a');
 const FOG=new Set(S.fog);const CELL=.00008;   /* about 9 m */
 let panel=1,mmap=null,follow=true,nearby=[];
 const fmtT=ms=>{const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60;return h?h+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'):m+':'+String(sec).padStart(2,'0')};
@@ -1105,7 +1141,7 @@ function onWalkFix(f,o){const w=S.walk;if(!w.home){w.home={lat:f.lat,lon:f.lon}}
   if(o&&hav(o,f)<120){const n=Math.ceil(hav(o,f)/8);for(let i=1;i<=n;i++)uncover(o.lat+(f.lat-o.lat)*i/n,o.lon+(f.lon-o.lon)*i/n)}else uncover(f.lat,f.lon);
   if(!w.wild)spawnWild(w.home);
   loadCell(Math.floor(f.lat/ACELL),Math.floor(f.lon/ACELL));checkLandmarks(f);
-  const dh=hav(f,w.home);if(!w.homeSeen&&w.dist>(S.set.bench?30:150)&&dh<=50){w.homeSeen=true;sfx.chime();setMode('home');$('#bigRose').classList.add('warm');say('The lantern’s glow. Home is close. Hold to end the walk.',10000)}
+  const dh=hav(f,w.home);if(!w.homeSeen&&w.dist>(S.set.bench?30:150)&&dh<=50){w.homeSeen=true;sfx.chime();setMode('home');$('#bigRose').classList.add('warm');say('The lantern\u2019s glow. Home is close. Hold the red button to end the walk.',10000)}
   if(room==='out'&&panel===0)drawFog()}
 function uncover(lat,lon){const i=Math.round(lat/CELL),j=Math.round(lon/(CELL/Math.cos(lat*Math.PI/180))),k=i+','+j;if(!FOG.has(k)){FOG.add(k);S.fog.push(k)}}
 function spawnWild(home){const w=S.walk;w.wild=[];const R=()=>{const x=Math.random();return x<.55?'common':x<.83?'uncommon':x<.96?'rare':'legendary'};
@@ -1231,14 +1267,14 @@ async function showMap(){try{await leaflet()}catch(e){return say('The map could 
   needCells();drawFog();clearInterval(atlasIv);atlasIv=setInterval(()=>{if(room==='out'&&panel===0)drawFog();else clearInterval(atlasIv)},120)}
 /* the compass */
 let cmode='north',cT=0,lastFollow=0;
-function setMode(m){cmode=m;document.querySelectorAll('#modes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m))}
+function setMode(m){cmode=m;document.querySelectorAll('#modes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));const f=$('#bigRose');if(f)f.classList.toggle('northmode',m==='north')}
 function candidates(){const out=[];if(S.walk&&S.walk.wild)S.walk.wild.forEach(c=>{if(!c.claimed)out.push({lat:c.lat,lon:c.lon,label:`a wild ${c.rar} ${c.el} creature`})});return out.concat(nearby)}
 function tickCompass(dt){if(!S.walk)return;cT+=dt;if(cT<.2)return;cT=0;const w=S.walk,hd=M.heading!=null?M.heading:0;
-  $('#tOut').textContent=fmtT(Date.now()-w.t0);$('#dOut').textContent=fmtD(w.dist);let ang=-hd,txt=M.heading==null?'A plain compass. (This device reports no heading, so north is up.)':'A plain compass.';
-  if(cmode==='home'){if(S.fix&&w.home){const d=hav(S.fix,w.home);ang=bearing(S.fix,w.home)-hd;txt=d<=50?'The lantern is right here. Hold to end the walk.':'Home is '+Math.round(d)+' m that way (as the crow flies).'}else txt='Waiting for your position…'}
+  $('#tOut').textContent=fmtT(Date.now()-w.t0);$('#dOut').textContent=fmtD(w.dist);let ang=-hd,txt=M.heading!=null?'North':window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission?'Tap the compass to wake it':'No compass on this device';$('#card').style.transform=`rotate(${-hd}deg)`;
+  if(cmode==='home'){if(S.fix&&w.home){const d=hav(S.fix,w.home);ang=bearing(S.fix,w.home)-hd;txt=d<=50?'The lantern is right here':'Home \u00b7 '+Math.round(d)+' m'}else txt='Finding you\u2026'}
   if(cmode==='creature'){let best=null;if(S.fix)candidates().forEach(c=>{const d=hav(S.fix,c);if(d<=500&&(!best||d<best.d))best={c,d}});
-    if(best){ang=bearing(S.fix,best.c)-hd;txt=best.d<=20?`${best.c.label[0].toUpperCase()+best.c.label.slice(1)} is right here. Raise the camera.`:`${best.c.label[0].toUpperCase()+best.c.label.slice(1)}, ${Math.round(best.d)} m.`}
-    else txt=S.fix?'No creatures within 500 m.':'Waiting for your position…'}
+    if(best){ang=bearing(S.fix,best.c)-hd;txt=best.d<=20?'Right here \u00b7 raise the camera':`${best.c.label[0].toUpperCase()+best.c.label.slice(1)} \u00b7 ${Math.round(best.d)} m`}
+    else txt=S.fix?'No creatures within 500 m':'Finding you\u2026'}
   $('#bigNeedle').style.transform=`rotate(${ang}deg)`;$('#readout').textContent=txt;
   if(panel===0&&follow&&mmap&&S.fix&&Date.now()-lastFollow>3000){lastFollow=Date.now();mmap.panTo([S.fix.lat,S.fix.lon],{animate:true})}}
 /* coming home */
@@ -1308,6 +1344,7 @@ function wireWalk(){
   $('#track').addEventListener('pointerup',e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(!S.walk)return;if(dx<-50){sfx.fold();setPanel(panel+1)}else if(dx>50){sfx.fold();setPanel(panel-1)}});
   document.querySelectorAll('#modes button').forEach(b=>b.addEventListener('click',()=>{sfx.detent(5);setMode(b.dataset.m);cT=1}));
   holdable($('#endWalk'),900,endWalk);
+  $('#bigRose').addEventListener('click',()=>{motionAsked=false;askMotion();sfx.detent(5);setTimeout(()=>{if(M.heading==null)say('Still no heading. Check Settings \u203a Apps \u203a Safari \u203a Motion & Orientation Access.',7000)},1500)});
   addEventListener('resize',()=>{if(mmap){mmap.invalidateSize();drawFog()}})}
 
 /* ---------- workshop ---------- */
@@ -1322,7 +1359,7 @@ function whoLine(){const l=$('#whoLine'),b=$('#whoBtn');if(!l)return;l.textConte
 let whoThen=null;
 function askWho(then){whoThen=then||null;$('#whoErr').hidden=true;$('#whoName').value=S.user?S.user.username:'';$('#whoPin').value='';$('#who').hidden=false;setTimeout(()=>$('#whoName').focus(),50)}
 function closeWho(){$('#who').hidden=true;const t=whoThen;whoThen=null;if(t)t()}
-function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);document.querySelectorAll('[name=art]').forEach(r=>r.checked=r.value===S.set.art);document.querySelectorAll('[name=scene]').forEach(r=>r.checked=r.value===S.set.scene);whoLine();$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
+function openShop(){document.querySelectorAll('[name=eng]').forEach(r=>r.checked=r.value===S.set.engine);document.querySelectorAll('[name=art]').forEach(r=>r.checked=r.value===S.set.art);document.querySelectorAll('[name=scene]').forEach(r=>r.checked=r.value===S.set.scene);document.querySelectorAll('[name=device]').forEach(r=>r.checked=r.value===S.set.device);whoLine();$('#setBench').checked=S.set.bench;$('#setManual').checked=S.set.manual;
   $('#logOut').hidden=true;$('#erase').textContent='Erase everything';$('#shop').hidden=false}
 function wire(){
   wireWalk();
@@ -1334,6 +1371,7 @@ function wire(){
   document.querySelectorAll('[name=eng]').forEach(r=>r.addEventListener('change',()=>{S.set.engine=r.value;save()}));
   document.querySelectorAll('[name=art]').forEach(r=>r.addEventListener('change',()=>setArt(r.value)));
   document.querySelectorAll('[name=scene]').forEach(r=>r.addEventListener('change',()=>setScene(r.value)));
+  document.querySelectorAll('[name=device]').forEach(r=>r.addEventListener('change',()=>setDevice(r.value)));
   $('#setBench').addEventListener('change',e=>{S.set.bench=e.target.checked;save()});$('#setManual').addEventListener('change',e=>{S.set.manual=e.target.checked;save()});
   $('#pickBtn').addEventListener('click',()=>$('#file').click());
   $('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{pick=im;pickPrev.src=im.src;pickPrev.hidden=false;$('#nolens').hidden=true;say('Press the shutter.')};im.src=URL.createObjectURL(f)});
